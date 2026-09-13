@@ -49,6 +49,10 @@ body {
 #terminal::-webkit-scrollbar { width: 8px; }
 #terminal::-webkit-scrollbar-track { background: #000; }
 #terminal::-webkit-scrollbar-thumb { background: #333; }
+/* 隐藏原生文件input */
+#file-input {
+    display:none;
+}
 </style>
 </head>
 <body>
@@ -57,6 +61,7 @@ body {
     <span id="prompt">></span>
     <input type="text" id="cmd-input" autofocus autocomplete="off">
 </div>
+<input type="file" id="file-input" accept=".json">
 <script>
 // 璀璨15.3 基岩版珍珠炮计算器 JS完整移植版，完全对应python v15.3
 const G = 0.025;
@@ -80,11 +85,19 @@ const ERR_MSG = {
     input_invalid: "输入非数字，格式错误",
     intercept_target_same_as_pearl: "错误：拦截点与珍珠炮口位置几乎重合",
     intercept_no_solution_basis: "错误：左右TNT的推力组合无法合成指向拦截点的速度方向，无解",
-    intercept_tick_too_large: "错误：在单阵列61440上限内，找不到满足[下落≤1格]的解"
+    intercept_tick_too_large: "错误：在单阵列61440上限内，找不到满足[下落≤1格]的解",
+    json_parse_err: "JSON解析失败，请检查配置文件格式",
+    json_missing: "配置文件缺少珍珠坐标或火控架构字段",
 };
 
 const terminal = document.getElementById('terminal');
 const input = document.getElementById('cmd-input');
+const fileInput = document.getElementById('file-input');
+
+// ========== 新增全局配置存储 ==========
+let configData = null;
+let configFileName = "无";
+
 function print(text = "") {
     terminal.textContent += text + "\n";
     terminal.scrollTop = terminal.scrollHeight;
@@ -592,7 +605,17 @@ function function_F_start(){
     print("\n==== F模式：指定TNT配置与轨迹查询 ====");
     f_state.active = true;
     f_state.step =0;
-    print("珍珠初始X：");
+    // 如果存在配置，直接填充珍珠坐标
+    if(configData){
+        f_state.pe_x = configData.pearlX;
+        f_state.pe_y = configData.pearlY;
+        f_state.pe_z = configData.pearlZ;
+        print(`已加载配置珍珠坐标：X=${f_state.pe_x}, Y=${f_state.pe_y}, Z=${f_state.pe_z}`);
+        f_state.step =3;
+        print("左阵列TNT数量：");
+    }else{
+        print("珍珠初始X：");
+    }
 }
 
 function function_F_input(val){
@@ -714,6 +737,7 @@ function showMainMenu() {
     print("=".repeat(55));
     print("璀璨15.3基岩版通用珍珠炮计算器 v15.3");
     print("=".repeat(55));
+    print(`配置文件读取状态：${configFileName}`);
     print("  A = 已知落点反推TNT数量");
     print("  B = 给定TNT算落点");
     print("  C = 自定义火控架构求解");
@@ -721,8 +745,9 @@ function showMainMenu() {
     print("  E = 帮助说明");
     print("  F = 指定配置与轨迹查询");
     print("  G = 拦截求解模式");
+    print("  H = 读取配置文件");
     print("");
-    print("请输入选项(A/B/C/D/E/F/G)：");
+    print("请输入选项(A/B/C/D/E/F/G/H)：");
 }
 
 function showHelp() {
@@ -734,8 +759,38 @@ function showHelp() {
     print(" 5 //若您输入E将会弹出这些文字给予恁说明，并返回交互界面");
     print(" 6 //若您输入F 您需要输入珍珠初始坐标、两阵列TNT数量、打角方向和目标落地Y坐标（TNT高度自动=珍珠眼部高度），程序将计算弹道、落点和飞行时间，之后您可以查询任意tick或tick范围内的珍珠坐标");
     print(" 7 //若您输入G 拦截求解模式，输入珍珠初始XZ、拦截目标XZ；约束：抵达拦截点下落不超过1格，输出最小总TNT配置");
+    print(" 8 //若您输入H 读取JSON配置文件，自动填入珍珠XYZ坐标与火控架构，支持中文文件名");
     print("=============本计算器适用基岩版1.16.210及以上版本，由鎏龍霄飓开发，面向全体玩家开源=============");
     print("");
+    showMainMenu();
+}
+
+// ========= 文件上传处理 =========
+fileInput.onchange = async function(e){
+    const file = e.target.files[0];
+    if(!file){
+        showMainMenu();
+        return;
+    }
+    try{
+        const txt = await file.text();
+        const jsonObj = JSON.parse(txt);
+        //校验字段
+        if(!("pearlX" in jsonObj) || !("pearlY" in jsonObj) || !("pearlZ" in jsonObj) || !("arch" in jsonObj)){
+            print(`\n${ERR_MSG.json_missing}`);
+            fileInput.value="";
+            showMainMenu();
+            return;
+        }
+        configData = jsonObj;
+        configFileName = `已上传=${file.name}`;
+        print(`\n文件上传成功`);
+    }catch(err){
+        print(`\n${ERR_MSG.json_parse_err}`);
+        configData=null;
+        configFileName="无";
+    }
+    fileInput.value="";
     showMainMenu();
 }
 
@@ -753,30 +808,72 @@ function handleInput(cmd) {
         }else if(mode === 'E'){
             showHelp();
             return;
+        }else if(mode === 'H'){
+            print("\n==== H模式：读取配置JSON ====");
+            print("请在弹出的文件管理器选择json配置文件");
+            fileInput.click();
+            return;
         }else if(mode === 'A'){
             state = 'A';
             step =0;
             print("\n==== A模式：落点反推TNT ====");
-            print("目的地X：");
+            if(configData){
+                print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
+                inputBuffer.pe_x = configData.pearlX;
+                inputBuffer.pe_y = configData.pearlY;
+                inputBuffer.pe_z = configData.pearlZ;
+                print("目的地X：");
+                step =0;
+            }else{
+                print("目的地X：");
+            }
         }else if(mode === 'B'){
             state = 'B';
             step =0;
             print("\n==== B模式：TNT正向算落点 ====");
-            print("左阵列TNT数量：");
+            if(configData){
+                print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
+                inputBuffer.pe_x = configData.pearlX;
+                inputBuffer.pe_y = configData.pearlY;
+                inputBuffer.pe_z = configData.pearlZ;
+                print("左阵列TNT数量：");
+                step =0;
+            }else{
+                print("左阵列TNT数量：");
+            }
         }else if(mode === 'C'){
             state = 'C';
             step =0;
             print("\n==== C模式 自定义火控架构 ====");
-            print("输入架构数字（空格分隔，直接回车无限制）：");
+            if(configData){
+                inputBuffer.arch = configData.arch;
+                print(`已加载火控架构集合：${inputBuffer.arch}`);
+                print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
+                inputBuffer.pe_x = configData.pearlX;
+                inputBuffer.pe_y = configData.pearlY;
+                inputBuffer.pe_z = configData.pearlZ;
+                print("目的地X：");
+                step =1;
+            }else{
+                print("输入架构数字（空格分隔，直接回车无限制）：");
+            }
         }else if(mode === 'F'){
             function_F_start();
         }else if(mode === 'G'){
             state = 'G';
             step =0;
             print("\n==== G模式：拦截求解模式 ====");
-            print("珍珠初始 X：");
+            if(configData){
+                print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
+                inputBuffer.px = configData.pearlX;
+                inputBuffer.pz = configData.pearlZ;
+                print("拦截目标 X：");
+                step =2;
+            }else{
+                print("珍珠初始 X：");
+            }
         }else{
-            print("\n输入无效，请输入 A/B/C/D/E/F/G");
+            print("\n输入无效，请输入 A/B/C/D/E/F/G/H");
             showMainMenu();
         }
         return;
@@ -793,8 +890,13 @@ function handleInput(cmd) {
                 print("目的地Z：");
             }else if(step ===2){
                 inputBuffer.dest_z = parseFloat(cmd);
-                step =3;
-                print("珍珠初始X：");
+                // 如果没有配置才继续输入珍珠坐标，有配置直接跳到计算
+                if(configData){
+                    step =5;
+                }else{
+                    step =3;
+                    print("珍珠初始X：");
+                }
             }else if(step ===3){
                 inputBuffer.pe_x = parseFloat(cmd);
                 step =4;
@@ -804,7 +906,9 @@ function handleInput(cmd) {
                 step =5;
                 print("珍珠初始Z：");
             }else if(step ===5){
-                inputBuffer.pe_z = parseFloat(cmd);
+                if(!configData){
+                    inputBuffer.pe_z = parseFloat(cmd);
+                }
                 const target = [inputBuffer.dest_x, inputBuffer.dest_y, inputBuffer.dest_z];
                 const pearl = [inputBuffer.pe_x, inputBuffer.pe_y, inputBuffer.pe_z];
                 if(Math.abs(pearl[1] - target[1]) < 1e-6){
@@ -872,7 +976,16 @@ function handleInput(cmd) {
             }else if(step ===1){
                 inputBuffer.nr = parseInt(cmd);
                 step =2;
-                print("珍珠初始X：");
+                // 有配置跳过珍珠坐标输入
+                if(configData){
+                    inputBuffer.pe_x = configData.pearlX;
+                    inputBuffer.pe_y = configData.pearlY;
+                    inputBuffer.pe_z = configData.pearlZ;
+                    print("输入打角方向(x+/x-/z+/z-)：");
+                    step =5;
+                }else{
+                    print("珍珠初始X：");
+                }
             }else if(step ===2){
                 inputBuffer.pe_x = parseFloat(cmd);
                 step =3;
@@ -890,21 +1003,19 @@ function handleInput(cmd) {
                 step =6;
                 print("目标落地Y高度：");
             }else if(step ===6){
-                inputBuffer.land_y = parseFloat(cmd);
+                inputBuffer.y_land = parseFloat(cmd);
                 const pearl = [inputBuffer.pe_x, inputBuffer.pe_y, inputBuffer.pe_z];
-                const tnt_y = auto_tnt_y(pearl[1]);
+                const tnt_y = auto_tnt_y(inputBuffer.pe_y);
                 const [tntL, tntR] = get_tnt_pair(pearl, tnt_y, inputBuffer.direct);
-                print(`TNT统一高度：${tnt_y}`);
-                const [res, err_code] = solve_B(inputBuffer.nl, inputBuffer.nr, pearl, tntL, tntR, inputBuffer.land_y);
+                const [res, err_code] = solve_B(inputBuffer.nl, inputBuffer.nr, pearl, tntL, tntR, inputBuffer.y_land);
                 if(res === null){
                     print(`\n计算失败：${ERR_MSG[err_code] || '未知错误'}`);
                 }else{
-                    print(`\n==== B模式结果 ====`);
+                    print(`\n==== B模式计算结果 ====`);
                     print(`打角状态：${res.angle}`);
-                    print(`竖直运动：${res.y_state}`);
-                    print(`飞行tick：${res.t_land.toFixed(2)}`);
-                    print(`落点 X=${res.land_pos[0].toFixed(4)} Y=${res.land_pos[1].toFixed(4)} Z=${res.land_pos[2].toFixed(4)}`);
-                    print(`坐标差 |ΔX|=${res.delta_abs[0].toFixed(4)} |ΔZ|=${res.delta_abs[2].toFixed(4)}`);
+                    print(`飞行tick：${res.t_land.toFixed(2)} (${(res.t_land/20).toFixed(2)}秒)`);
+                    print(`落点坐标 X=${res.land_pos[0].toFixed(4)}, Y=${res.land_pos[1].toFixed(4)}, Z=${res.land_pos[2].toFixed(4)}`);
+                    print(`竖直运动状态：${res.y_state}`);
                 }
                 print("\n回车返回主菜单...");
                 step =7;
@@ -919,18 +1030,7 @@ function handleInput(cmd) {
     }
     if(state === 'C'){
         try{
-            if(step ===0){
-                if(cmd === ""){
-                    inputBuffer.arch = null;
-                    print("火控架构集合为空集，程序将使用A算法");
-                }else{
-                    inputBuffer.arch = cmd.split(/\s+/).map(Number);
-                    inputBuffer.arch.sort((a,b)=>a-b);
-                    print(`加载架构集合：${inputBuffer.arch}`);
-                }
-                step =1;
-                print("目的地X：");
-            }else if(step ===1){
+            if(step ===1){
                 inputBuffer.dest_x = parseFloat(cmd);
                 step =2;
                 print("目的地Y：");
@@ -940,71 +1040,30 @@ function handleInput(cmd) {
                 print("目的地Z：");
             }else if(step ===3){
                 inputBuffer.dest_z = parseFloat(cmd);
-                step =4;
-                print("珍珠初始X：");
-            }else if(step ===4){
-                inputBuffer.pe_x = parseFloat(cmd);
-                step =5;
-                print("珍珠初始Y：");
-            }else if(step ===5){
-                inputBuffer.pe_y = parseFloat(cmd);
-                step =6;
-                print("珍珠初始Z：");
-            }else if(step ===6){
-                inputBuffer.pe_z = parseFloat(cmd);
-                const target = [inputBuffer.dest_x, inputBuffer.dest_y, inputBuffer.dest_z];
                 const pearl = [inputBuffer.pe_x, inputBuffer.pe_y, inputBuffer.pe_z];
-                if(Math.abs(pearl[1] - target[1]) <1e-6){
-                    print("\n【提示】珍珠初始Y与目标Y相等，自动切换至G拦截模式求解");
-                    const [res, err] = solve_intercept(pearl[0], pearl[2], target[0], target[2]);
-                    if(res === null){
-                        print(`\n计算失败：${ERR_MSG[err] || '未知错误'}`);
-                    }else{
-                        print("\n==== G模式拦截计算结果 ====");
-                        print(`打角方向     ：${res.direct}`);
-                        print(`左阵列TNT    ：${res.nL}`);
-                        print(`右阵列TNT    ：${res.nR}`);
-                        print(`总TNT数量    ：${res.total}`);
-                        print(`经过拦截点Tick：${res.t_intercept.toFixed(2)}`);
-                        print(`经过拦截点秒数：${(res.t_intercept/20).toFixed(3)} s`);
-                        print(`到达拦截点下落：${res.drop.toFixed(3)} 格（上限1.0）`);
-                        const cx = res.check_pos[0], cz = res.check_pos[2];
-                        print(`模拟校验拦截坐标：X=${cx.toFixed(3)}  Z=${cz.toFixed(3)}`);
-                    }
-                    print("\n回车返回主菜单...");
-                    step =7;
-                    return;
-                }
+                const target = [inputBuffer.dest_x, inputBuffer.dest_y, inputBuffer.dest_z];
                 const tnt_y = auto_tnt_y(pearl[1]);
                 const direct = auto_dir(target, pearl);
                 const [tntL, tntR] = get_tnt_pair(pearl, tnt_y, direct);
-                print(`自动发射方向：${direct}`);
+                print(`系统自动判定发射方向：${direct}`);
                 print(`TNT统一高度：${tnt_y}`);
-                let res, err;
-                if(inputBuffer.arch === null){
-                    [res, err] = solve_A(target, pearl, tntL, tntR);
-                }else{
-                    [res, err] = solve_C_fast(target, pearl, tntL, tntR, inputBuffer.arch);
-                }
+                const archList = inputBuffer.arch;
+                const [res, err_code] = solve_C_fast(target, pearl, tntL, tntR, archList);
                 if(res === null){
-                    print(`\n计算失败：${ERR_MSG[err] || '未知错误'}`);
+                    print(`\n计算失败：${ERR_MSG[err_code] || '未知错误'}`);
                 }else{
-                    print(`\n==== C模式最优解 ====`);
+                    print(`\n==== C模式【自定义架构】计算结果 ====`);
                     print(`打角状态：${res.angle}`);
-                    if(inputBuffer.arch !== null){
-                        print(`左：${res.nL} = ${res.expr_L}`);
-                        print(`右：${res.nR} = ${res.expr_R}`);
-                    }else{
-                        print(`左：${res.nL} 右：${res.nR}`);
-                    }
+                    print(`左阵列表达式：${res.expr_L}  共${res.nL}颗`);
+                    print(`右阵列表达式：${res.expr_R}  共${res.nR}颗`);
                     print(`总TNT：${res.nL + res.nR}`);
-                    print(`飞行tick：${res.t_land.toFixed(2)}`);
+                    print(`飞行tick：${res.t_land.toFixed(2)} (${(res.t_land/20).toFixed(2)}秒)`);
                     print(`落地坐标 X=${res.land_pos[0].toFixed(4)} Z=${res.land_pos[2].toFixed(4)}`);
                     print(`水平偏差：${res.error.toFixed(4)}格`);
                 }
                 print("\n回车返回主菜单...");
-                step =7;
-            }else if(step ===7){
+                step =4;
+            }else if(step ===4){
                 showMainMenu();
             }
         }catch(e){
@@ -1015,25 +1074,17 @@ function handleInput(cmd) {
     }
     if(state === 'G'){
         try{
-            if(step ===0){
-                inputBuffer.px = parseFloat(cmd);
-                step =1;
-                print("珍珠初始 Z：");
-            }else if(step ===1){
-                inputBuffer.pz = parseFloat(cmd);
-                step =2;
-                print("拦截目标 X：");
-            }else if(step ===2){
+            if(step ===2){
                 inputBuffer.ix = parseFloat(cmd);
                 step =3;
                 print("拦截目标 Z：");
             }else if(step ===3){
                 inputBuffer.iz = parseFloat(cmd);
-                const [res, err] = solve_intercept(inputBuffer.px, inputBuffer.pz, inputBuffer.ix, inputBuffer.iz);
+                const [res, err_code] = solve_intercept(inputBuffer.px, inputBuffer.pz, inputBuffer.ix, inputBuffer.iz);
                 if(res === null){
-                    print(`\n计算失败：${ERR_MSG[err] || '未知错误'}`);
+                    print(`\n计算失败：${ERR_MSG[err_code] || '未知错误'}`);
                 }else{
-                    print("\n==== G模式拦截计算结果 ====");
+                    print(`\n==== G模式拦截求解结果 ====`);
                     print(`打角方向     ：${res.direct}`);
                     print(`左阵列TNT    ：${res.nL}`);
                     print(`右阵列TNT    ：${res.nR}`);
@@ -1057,16 +1108,16 @@ function handleInput(cmd) {
     }
 }
 
-input.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
+// 绑定回车事件
+input.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
         const cmd = input.value;
-        print("> " + cmd);
-        input.value = '';
+        print(`> ${cmd}`);
         handleInput(cmd);
+        input.value = "";
     }
 });
 
+// 页面加载初始化
 showMainMenu();
 </script>
-</body>
-</html>
