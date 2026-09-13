@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>璀璨15.3基岩版珍珠炮计算器</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+    background: #000;
+    color: #fff;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: clamp(13px, 2.8vw, 15px);
+    line-height: 1.5;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+}
+#terminal {
+    height: calc(100vh - clamp(30px, 7vw, 36px));
+    height: calc(100dvh - clamp(30px, 7vw, 36px));
+    overflow-y: auto;
+    padding: 10px 15px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+#input-line {
+    height: clamp(30px, 7vw, 36px);
+    display: flex;
+    border-top: 1px solid #333;
+}
+#prompt {
+    padding: 5px 10px;
+    color: #fff;
+    flex-shrink: 0;
+}
+#cmd-input {
+    flex: 1;
+    background: #000;
+    color: #fff;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 5px 10px;
+    -webkit-appearance: none;
+    appearance: none;
+}
+#terminal::-webkit-scrollbar { width: 8px; }
+#terminal::-webkit-scrollbar-track { background: #000; }
+#terminal::-webkit-scrollbar-thumb { background: #333; }
+</style>
+</head>
+<body>
+<div id="terminal"></div>
+<div id="input-line">
+    <span id="prompt">></span>
+    <input type="text" id="cmd-input" autofocus autocomplete="off">
+</div>
+<script>
+// ===================== MCBE物理常数 璀璨15.3（无空气阻力 D=1） =====================
+const G = 0.025;
+const R = 8.0;
+const EYE = 0.25;
+const SINGLE_MAX = 0.90125;
+const SEARCH_RANGE = 1;
+const MAX_TICK = 20000;
+// G拦截模式常数
+const MAX_SINGLE_ARRAY = 61440;
+const AXIS_EPS = 1e-4;
+const ERR_POS_EPS = 0.01;
+const FIX_PEARL_Y = 64.0;
+const MAX_DROP = 1.0;
+
+const ERR_MSG = {
+    tnt_negative: "TNT数量不能为负数",
+    tnt_out_of_range: "TNT距离珍珠超过8格无推力",
+    no_landing: "珍珠无法落到目标Y高度",
+    target_too_close: "目标与珍珠距离过近无求解意义",
+    no_solution: "未找到符合架构的有效TNT组合",
+    input_invalid: "输入非数字，格式错误",
+    intercept_target_same_as_pearl: "错误：拦截点与珍珠炮口位置几乎重合",
+    intercept_no_solution_basis: "错误：左右TNT的推力组合无法合成指向拦截点的速度方向，无解",
+    intercept_tick_too_large: "错误：在单阵列61440上限内，找不到满足【下落≤1格】的解"
+};
+
+// ===================== 终端输出 =====================
+const terminal = document.getElementById('terminal');
+const input = document.getElementById('cmd-input');
+function print(text = "") {
+    terminal.textContent += text + "\n";
+    terminal.scrollTop = terminal.scrollHeight;
+}
+function clearTerminal() {
+    terminal.textContent = "";
+}
+
+// ===================== 基础辅助函数 =====================
+function S(t) {
+    return t;
+}
+function T(t) {
+    return t * (t - 1.0) / 2.0;
+}
+function auto_tnt_y(pe_y) {
+    return pe_y + EYE;
+}
+
+function calc_thrust(pearl_pos, tnt_pos) {
+    const [px, py, pz] = pearl_pos;
+    const [tx, ty, tz] = tnt_pos;
+    const eye_y = py + EYE;
+    const dx = tx - px;
+    const dy = ty - eye_y;
+    const dz = tz - pz;
+    const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+    if (dist >= R) return [0.0, 0.0, 0.0];
+    const mag = (1.0 - dist / R) * SINGLE_MAX;
+    const dir_x = px - tx;
+    const dir_y = eye_y - ty;
+    const dir_z = pz - tz;
+    const dir_dist = Math.sqrt(dir_x*dir_x + dir_y*dir_y + dir_z*dir_z);
+    if (dir_dist < 1e-12) return [0.0, 0.0, 0.0];
+    return [
+        mag * dir_x / dir_dist,
+        mag * dir_y / dir_dist,
+        mag * dir_z / dir_dist
+    ];
+}
+
+function get_pos(p0, v0, t) {
+    const st = S(t);
+    const tt = T(t);
+    return [
+        p0[0] + v0[0] * st,
+        p0[1] + v0[1] * st - G * tt,
+        p0[2] + v0[2] * st
+    ];
+}
+
+function find_land_time(p0, v0, y_target) {
+    if (p0[1] <= y_target && v0[1] <= 0) return 0.0;
+    let t_high = 1.0;
+    for (let i = 0; i < 50; i++) {
+        if (get_pos(p0, v0, t_high)[1] <= y_target) break;
+        t_high *= 2;
+        if (t_high > MAX_TICK) return null;
+    }
+    if (t_high > MAX_TICK) return null;
+    let t_low = 0.0;
+    for (let i = 0; i < 120; i++) {
+        const t_mid = (t_low + t_high) / 2;
+        if (get_pos(p0, v0, t_mid)[1] > y_target) {
+            t_low = t_mid;
+        } else {
+            t_high = t_mid;
+        }
+    }
+    return (t_low + t_high) / 2;
+}
+
+function y_motion_state(v0y) {
+    if (v0y > 0.001) return "上抛（先升后降）";
+    else if (v0y < -0.001) return "下偏（快速下坠）";
+    return "平射（重力缓慢压低）";
+}
+
+function angle_state(pearl_pos, tnt_L, tnt_R, nL, nR) {
+    const [px, , pz] = pearl_pos;
+    const [tlx, , tlz] = tnt_L;
+    const [trx, , trz] = tnt_R;
+    const dx = (tlx + trx) / 2 - px;
+    const dz = (tlz + trz) / 2 - pz;
+    const diff = Math.abs(nL - nR);
+    let main, side;
+    if (Math.abs(dx) >= Math.abs(dz)) {
+        main = dx > 0 ? "x-" : "x+";
+        if (diff < 0.5) {
+            side = "无侧向偏移";
+        } else {
+            if (tlz > trz) {
+                side = nL < nR ? `向+Z偏转，左侧少${diff}颗` : `向-Z偏转，右侧少${diff}颗`;
+            } else {
+                side = nL < nR ? `向-Z偏转，左侧少${diff}颗` : `向+Z偏转，右侧少${diff}颗`;
+            }
+        }
+    } else {
+        main = dz > 0 ? "z-" : "z+";
+        if (diff < 0.5) {
+            side = "无侧向偏移";
+        } else {
+            if (tlx > trx) {
+                side = nL < nR ? `向+X偏转，左侧少${diff}颗` : `向-X偏转，右侧少${diff}颗`;
+            } else {
+                side = nL < nR ? `向-X偏转，左侧少${diff}颗` : `向+X偏转，右侧少${diff}颗`;
+            }
+        }
+    }
+    return `主方向${main}，${side}`;
+}
+
+function auto_dir(target, pearl) {
+    const dx = target[0] - pearl[0];
+    const dz = target[2] - pearl[2];
+    if (Math.abs(dx) >= Math.abs(dz)) {
+        return dx > 0 ? "x+" : "x-";
+    } else {
+        return dz > 0 ? "z+" : "z-";
+    }
+}
+
+function get_tnt_pair(pearl, tnt_y, direct) {
+    const [px, py, pz] = pearl;
+    let tl, tr;
+    switch(direct) {
+        case "x+":
+            tl = [px - 0.5, tnt_y, pz + 0.5];
+            tr = [px - 0.5, tnt_y, pz - 0.5];
+            break;
+        case "x-":
+            tl = [px + 0.5, tnt_y, pz + 0.5];
+            tr = [px + 0.5, tnt_y, pz - 0.5];
+            break;
+        case "z+":
+            tl = [px + 0.5, tnt_y, pz - 0.5];
+            tr = [px - 0.5, tnt_y, pz - 0.5];
+            break;
+        case "z-":
+            tl = [px + 0.5, tnt_y, pz + 0.5];
+            tr = [px - 0.5, tnt_y, pz + 0.5];
+            break;
+        default:
+            tl = [px - 0.5, tnt_y, pz + 0.5];
+            tr = [px - 0.5, tnt_y, pz - 0.5];
+    }
+    return [tl, tr];
+}
+
+// ===================== B模式 静默版 =====================
+function solve_B_quiet(nL, nR, pearl, tntL, tntR, y_land) {
+    if (nL < 0 || nR < 0) return null;
+    const vL = calc_thrust(pearl, tntL);
+    const vR = calc_thrust(pearl, tntR);
+    if (vL[0] === 0 && vL[1] === 0 && vL[2] === 0 && vR[0] === 0 && vR[1] === 0 && vR[2] === 0) return null;
+    const v0x = nL * vL[0] + nR * vR[0];
+    const v0y = nL * vL[1] + nR * vR[1];
+    const v0z = nL * vL[2] + nR * vR[2];
+    const v0 = [v0x, v0y, v0z];
+    const t_land = find_land_time(pearl, v0, y_land);
+    if (t_land === null) return null;
+    const pos = get_pos(pearl, v0, t_land);
+    const dx = Math.abs(pos[0] - pearl[0]);
+    const dy = Math.abs(pos[1] - pearl[1]);
+    const dz = Math.abs(pos[2] - pearl[2]);
+    return {
+        v0: v0,
+        t_land: t_land,
+        land_pos: pos,
+        delta_abs: [dx, dy, dz],
+        y_state: y_motion_state(v0y),
+        angle: angle_state(pearl, tntL, tntR, nL, nR)
+    };
+}
+
+// ===================== 浮点最优迭代 A/C共用 =====================
+function solve_float_opt(target, pearl, tntL, tntR) {
+    const [tx, ty, tz] = target;
+    const vL = calc_thrust(pearl, tntL);
+    const vR = calc_thrust(pearl, tntR);
+    if ((vL[0] === 0 && vL[1] === 0 && vL[2] === 0) || (vR[0] === 0 && vR[1] === 0 && vR[2] === 0)) {
+        return [null, null, null];
+    }
+    const dx = tx - pearl[0];
+    const dz = tz - pearl[2];
+    const dist_h = Math.sqrt(dx*dx + dz*dz);
+    if (dist_h < 0.01) return [0, 0, 0];
+    let t_est = Math.max(10, Math.min(5000, dist_h / 0.4));
+    let nLf = 0.0, nRf = 0.0;
+    for (let i = 0; i < 8; i++) {
+        const st = S(t_est);
+        const vx_req = dx / st;
+        const vz_req = dz / st;
+        const a = vL[0], b = vR[0];
+        const c = vL[2], d = vR[2];
+        const det = a * d - b * c;
+        if (Math.abs(det) < 1e-12) {
+            const total_v = Math.sqrt(vx_req**2 + vz_req**2);
+            const pv = Math.sqrt(vL[0]**2 + vL[2]**2);
+            const tn = pv ? total_v / pv : 0;
+            nLf = tn / 2;
+            nRf = tn / 2;
+        } else {
+            const dl = vx_req * d - vz_req * b;
+            const dr = a * vz_req - c * vx_req;
+            nLf = dl / det;
+            nRf = dr / det;
+        }
+        nLf = Math.max(0, nLf);
+        nRf = Math.max(0, nRf);
+        const vt = [
+            nLf*vL[0] + nRf*vR[0],
+            nLf*vL[1] + nRf*vR[1],
+            nLf*vL[2] + nRf*vR[2]
+        ];
+        const tr = find_land_time(pearl, vt, ty);
+        if (tr === null) {
+            t_est *= 1.3;
+            continue;
+        }
+        if (Math.abs(tr - t_est) / t_est < 0.01) break;
+        t_est = tr;
+    }
+    return [nLf, nRf, t_est];
+}
+
+// ===================== A模式求解 =====================
+function solve_A(target, pearl, tntL, tntR) {
+    const [tx, ty, tz] = target;
+    const vL = calc_thrust(pearl, tntL);
+    const vR = calc_thrust(pearl, tntR);
+    if ((vL[0] === 0 && vL[1] === 0 && vL[2] === 0) || (vR[0] === 0 && vR[1] === 0 && vR[2] === 0)) {
+        return [null, "tnt_out_of_range"];
+    }
+    const dx = tx - pearl[0];
+    const dz = tz - pearl[2];
+    const dist_h = Math.sqrt(dx*dx + dz*dz);
+    if (dist_h < 0.01) return [null, "target_too_close"];
+    const [nLf, nRf] = solve_float_opt(target, pearl, tntL, tntR);
+    if (nLf === null) return [null, "tnt_out_of_range"];
+    const nL0 = Math.round(nLf);
+    const nR0 = Math.round(nRf);
+    const sL = Math.max(0, nL0 - SEARCH_RANGE);
+    const eL = nL0 + SEARCH_RANGE;
+    const sR = Math.max(0, nR0 - SEARCH_RANGE);
+    const eR = nR0 + SEARCH_RANGE;
+    let best_err = Infinity;
+    let best = null;
+    let bnL = 0, bnR = 0;
+    let top5 = [];
+    for (let nL = sL; nL <= eL; nL++) {
+        for (let nR = sR; nR <= eR; nR++) {
+            if (nL === 0 && nR === 0) continue;
+            const res = solve_B_quiet(nL, nR, pearl, tntL, tntR, ty);
+            if (res === null) continue;
+            const err_h = Math.sqrt((res.land_pos[0]-tx)**2 + (res.land_pos[2]-tz)**2);
+            top5.push([err_h, nL, nR, res]);
+            top5.sort((a,b)=>a[0]-b[0]);
+            top5 = top5.slice(0,5);
+            if(err_h < best_err){
+                best_err = err_h;
+                best = res;
+                bnL = nL;
+                bnR = nR;
+            }
+        }
+    }
+    if(best === null) return [null,"no_solution"];
+    best.nL = bnL;
+    best.nR = bnR;
+    best.error = best_err;
+    best.float_sol = [nLf,nRf];
+    best.top5 = top5;
+    return [best, null];
+}
+
+// ===================== C模式 =====================
+function generate_arch_sum(arch) {
+    let subsets = [[0, "0"]];
+    for (const num of arch) {
+        const temp = [];
+        for (const [val, expr] of subsets) {
+            const new_val = val + num;
+            const new_expr = val === 0 ? `${num}` : `${expr}+${num}`;
+            temp.push([new_val, new_expr]);
+        }
+        subsets = subsets.concat(temp);
+    }
+    const unique = {};
+    for (const [v, e] of subsets) {
+        if (!(v in unique)) unique[v] = e;
+    }
+    return Object.entries(unique).sort((a,b)=>Number(a[0])-Number(b[0]));
+}
+function binary_search_nearest(sorted_list, target) {
+    let left = 0;
+    let right = sorted_list.length;
+    while(left < right){
+        const mid = Math.floor((left+right)/2);
+        if(Number(sorted_list[mid][0]) < target) left = mid+1;
+        else right = mid;
+    }
+    return left;
+}
+function solve_C_fast(target, pearl, tntL, tntR, arch) {
+    const vL = calc_thrust(pearl, tntL);
+    const vR = calc_thrust(pearl, tntR);
+    const [tx, ty, tz] = target;
+    const [nLf, nRf, t_opt] = solve_float_opt(target, pearl, tntL, tntR);
+    if(nLf === null) return [null,"tnt_out_of_range"];
+    const left_pool = generate_arch_sum(arch);
+    const right_pool = generate_arch_sum(arch);
+    let best_err = Infinity;
+    let best_data = null;
+    let best_nl = 0, best_nr =0;
+    let best_el = "", best_er = "";
+    const vLx = vL[0], vLz = vL[2];
+    const vRx = vR[0], vRz = vR[2];
+    const denom = vRx**2 + vRz**2;
+    const dx = tx - pearl[0];
+    const dz = tz - pearl[2];
+    const st_opt = t_opt>0 ? S(t_opt):1;
+    const vx_need = dx / st_opt;
+    const vz_need = dz / st_opt;
+    const cross = vLx * vRx + vLz * vRz;
+    const req_dot = vx_need * vRx + vz_need * vRz;
+    const near_k =4;
+    for(const [nl_val, el_str] of left_pool){
+        let nr_ideal;
+        if(denom <1e-10){
+            nr_ideal = nRf;
+        }else{
+            nr_ideal = (req_dot - Number(nl_val)*cross)/denom;
+            nr_ideal = Math.max(0, nr_ideal);
+        }
+        const pos = binary_search_nearest(right_pool, nr_ideal);
+        const start = Math.max(0, pos-near_k);
+        const end = Math.min(right_pool.length, pos+near_k+1);
+        for(let idx=start; idx<end; idx++){
+            const [nr_val, er_str] = right_pool[idx];
+            if(Number(nl_val)===0 && Number(nr_val)===0) continue;
+            const res = solve_B_quiet(Number(nl_val), Number(nr_val), pearl, tntL, tntR, ty);
+            if(res === null) continue;
+            const err = Math.sqrt((res.land_pos[0]-tx)**2 + (res.land_pos[2]-tz)**2);
+            if(err < best_err){
+                best_err = err;
+                best_data = res;
+                best_nl = Number(nl_val);
+                best_nr = Number(nr_val);
+                best_el = el_str;
+                best_er = er_str;
+            }
+        }
+    }
+    if(best_data === null) return [null,"no_solution"];
+    best_data.nL = best_nl;
+    best_data.nR = best_nr;
+    best_data.expr_L = best_el;
+    best_data.expr_R = best_er;
+    best_data.error = best_err;
+    return [best_data, null];
+}
+
+// ===================== G拦截模式核心 =====================
+function get_drop_height(t) {
+    return G * T(t);
+}
+function solve_t_for_target(vx, vz, dx_target, dz_target) {
+    const eps = 1e-12;
+    let candidates_t = [];
+    if(Math.abs(vx) > eps){
+        const tx = dx_target / vx;
+        if(tx>0) candidates_t.push(tx);
+    }
+    if(Math.abs(vz) > eps){
+        const tz = dz_target / vz;
+        if(tz>0) candidates_t.push(tz);
+    }
+    let valid_t = null;
+    for(const t of candidates_t){
+        const pred_dx = vx * t;
+        const pred_dz = vz * t;
+        if(Math.hypot(pred_dx-dx_target, pred_dz-dz_target) < ERR_POS_EPS){
+            valid_t = t;
+            break;
+        }
+    }
+    return valid_t;
+}
+function solve_intercept(px, pz, ix, iz) {
+    const py = FIX_PEARL_Y;
+    const pearl_xyz = [px, py, pz];
+    const dX = ix - px;
+    const dZ = iz - pz;
+    if(Math.hypot(dX, dZ) < 1e-3) return [null, "intercept_target_same_as_pearl"];
+    const target_virtual = [ix, py, iz];
+    const direct = auto_dir(target_virtual, pearl_xyz);
+    const tnt_y = auto_tnt_y(py);
+    const [tntL, tntR] = get_tnt_pair(pearl_xyz, tnt_y, direct);
+    const vL = calc_thrust(pearl_xyz, tntL);
+    const vR = calc_thrust(pearl_xyz, tntR);
+    if(Math.hypot(vL[0],vL[2])<1e-12 || Math.hypot(vR[0],vR[2])<1e-12){
+        return [null, "tnt_out_of_range"];
+    }
+    const a = vL[0], c = vL[2];
+    const b = vR[0], d = vR[2];
+    const is_axis_x = Math.abs(dZ) < AXIS_EPS;
+    const is_axis_z = Math.abs(dX) < AXIS_EPS;
+    if(is_axis_x || is_axis_z){
+        let candidate_list = [];
+        for(let M=1; M<=MAX_SINGLE_ARRAY; M++){
+            const N = M;
+            const v0x = M*a + N*b;
+            const v0z = M*c + N*d;
+            if(Math.hypot(v0x, v0z) <1e-10) continue;
+            const t = solve_t_for_target(v0x, v0z, dX, dZ);
+            if(t === null || !(0<t && t<MAX_TICK)) continue;
+            const drop = get_drop_height(t);
+            if(drop > MAX_DROP) continue;
+            const pos_check = get_pos(pearl_xyz, [v0x,0.0,v0z], t);
+            const err = Math.hypot(pos_check[0]-ix, pos_check[2]-iz);
+            if(err < ERR_POS_EPS){
+                candidate_list.push({
+                    nL:M, nR:N, total:M+N, t_intercept:t, drop:drop,
+                    v0:[v0x,0.0,v0z], check_pos:pos_check, direct:direct
+                });
+                break;
+            }
+        }
+        if(candidate_list.length === 0) return [null, "intercept_tick_too_large"];
+        return [candidate_list[0], null];
+    }
+    const det = a*d - b*c;
+    const eps_det = 1e-10;
+    if(Math.abs(det) < eps_det){
+        const dot = a*dX + c*dZ;
+        if(dot <= 1e-10) return [null, "intercept_no_solution_basis"];
+        for(let S=1; S<=MAX_SINGLE_ARRAY; S++){
+            const v0x = S*a;
+            const v0z = S*c;
+            const t = solve_t_for_target(v0x, v0z, dX, dZ);
+            if(t===null || !(0<t && t<MAX_TICK)) continue;
+            const drop = get_drop_height(t);
+            if(drop>MAX_DROP) continue;
+            const pos_check = get_pos(pearl_xyz, [v0x,0.0,v0z], t);
+            const err = Math.hypot(pos_check[0]-ix, pos_check[2]-iz);
+            if(err < ERR_POS_EPS){
+                return [{
+                    nL:S, nR:0, total:S, t_intercept:t, drop:drop,
+                    v0:[v0x,0.0,v0z], check_pos:pos_check, direct:direct
+                }, null];
+            }
+        }
+        return [null, "intercept_tick_too_large"];
+    }
+    const M0 = (d*dX - b*dZ)/det;
+    const N0 = (a*dZ - c*dX)/det;
+    if(M0 <=1e-8 && N0 <=1e-8) return [null, "intercept_no_solution_basis"];
+    const ratio_sum = M0 + N0;
+    const m_ratio = M0 / ratio_sum;
+    const n_ratio = N0 / ratio_sum;
+    let found = null;
+    for(let totalS=2; totalS <= MAX_SINGLE_ARRAY*2; totalS++){
+        let Mc = Math.round(totalS * m_ratio);
+        let Nc = Math.round(totalS * n_ratio);
+        Mc = Math.max(1, Mc);
+        Nc = Math.max(1, Nc);
+        if(Mc>MAX_SINGLE_ARRAY || Nc>MAX_SINGLE_ARRAY) continue;
+        const v0x = Mc*a + Nc*b;
+        const v0z = Mc*c + Nc*d;
+        const dot = v0x*dX + v0z*dZ;
+        if(dot <=1e-10) continue;
+        const t = solve_t_for_target(v0x, v0z, dX, dZ);
+        if(t===null || !(0<t && t<MAX_TICK)) continue;
+        const drop = get_drop_height(t);
+        if(drop>MAX_DROP) continue;
+        const pos_check = get_pos(pearl_xyz, [v0x,0.0,v0z], t);
+        const err = Math.hypot(pos_check[0]-ix, pos_check[2]-iz);
+        if(err < ERR_POS_EPS){
+            for(let dL=-SEARCH_RANGE; dL<=SEARCH_RANGE; dL++){
+                for(let dR=-SEARCH_RANGE; dR<=SEARCH_RANGE; dR++){
+                    const m_t = Mc + dL;
+                    const n_t = Nc + dR;
+                    if(m_t<1 || n_t<1 || m_t>MAX_SINGLE_ARRAY || n_t>MAX_SINGLE_ARRAY) continue;
+                    const vx_t = m_t*a + n_t*b;
+                    const vz_t = m_t*c + n_t*d;
+                    const t_t = solve_t_for_target(vx_t, vz_t, dX, dZ);
+                    if(t_t===null || !(0<t_t && t_t<MAX_TICK)) continue;
+                    const drop_t = get_drop_height(t_t);
+                    if(drop_t>MAX_DROP) continue;
+                    const pos_t = get_pos([px,py,pz],[vx_t,0.0,vz_t], t_t);
+                    const err_t = Math.hypot(pos_t[0]-ix, pos_t[2]-iz);
+                    if(err_t < ERR_POS_EPS){
+                        found = {
+                            nL:m_t, nR:n_t, total:m_t+n_t, t_intercept:t_t, drop:drop_t,
+                            v0:[vx_t,0.0,vz_t], check_pos:pos_t, direct:direct
+                        };
+                        return [found, null];
+                    }
+                }
+            }
+        }
+    }
+    if(found === null) return [null, "intercept_tick_too_large"];
+    return [found, null];
+}
+
+// ===================== F模式状态 =====================
+let f_state = {
+    active: false,
+    step:0,
+    pearl:null,
+    v0:null,
+    t_land:0
+};
+function function_F_start(){
+    print("\n==== F模式：指定TNT配置与轨迹查询 ====");
+    f_state.active = true;
+    f_state.step = 0;
+    print("珍珠初始X：");
+}
+function function_F_input(val){
+    const step = f_state.step;
+    try{
+        if(step ===0){
+            f_state.pe_x = parseFloat(val);
+            f_state.step = 1;
+            print("珍珠初始Y：");
+        }else if(step ===1){
+            f_state.pe_y = parseFloat(val);
+            f_state.step =2;
+            print("珍珠初始Z：");
+        }else if(step ===2){
+            f_state.pe_z = parseFloat(val);
+            f_state.step =3;
+            print("左阵列TNT数量：");
+        }else if(step ===3){
+            f_state.nL = parseInt(val);
+            f_state.step =4;
+            print("右阵列TNT数量：");
+        }else if(step ===4){
+            f_state.nR = parseInt(val);
+            f_state.step =5;
+            print("打角方向(x+/x-/z+/z-)：");
+        }else if(step ===5){
+            f_state.direct = val.trim().toLowerCase();
+            f_state.step =6;
+            print("目标落地Y高度：");
+        }else if(step ===6){
+            const y_land = parseFloat(val);
+            const pearl = [f_state.pe_x, f_state.pe_y, f_state.pe_z];
+            const tnt_y = auto_tnt_y(f_state.pe_y);
+            const [tntL, tntR] = get_tnt_pair(pearl, tnt_y, f_state.direct);
+            const res = solve_B_quiet(f_state.nL, f_state.nR, pearl, tntL, tntR, y_land);
+            if(res === null){
+                print(`计算失败：${ERR_MSG["tnt_out_of_range"]}`);
+                f_state.active = false;
+                showMainMenu();
+                return;
+            }
+            f_state.pearl = pearl;
+            f_state.v0 = res.v0;
+            f_state.t_land = res.t_land;
+            print(`\n【F模式：弹道计算完成】`);
+            print(`飞行时间：${res.t_land.toFixed(4)} tick`);
+            print(`落点坐标：X=${res.land_pos[0].toFixed(4)}, Y=${res.land_pos[1].toFixed(4)}, Z=${res.land_pos[2].toFixed(4)}`);
+            f_state.step =7;
+            print("\n请输入查询tick（整数），或'开始_结束'格式范围，或'R'返回主菜单：");
+        }else if(step ===7){
+            if(val.trim().toUpperCase() === 'R'){
+                f_state.active = false;
+                showMainMenu();
+                return;
+            }
+            if(val.includes('_')){
+                const parts = val.split('_');
+                if(parts.length !==2){
+                    print("无效格式：请使用 '开始_结束' 格式");
+                    return;
+                }
+                const start_tick = parseInt(parts[0]);
+                const end_tick = parseInt(parts[1]);
+                if(isNaN(start_tick)||isNaN(end_tick)){
+                    print("输入无效，请输入有效的数字");
+                    return;
+                }
+                if(start_tick <=0 || end_tick <=0){
+                    print("无效数值：tick必须大于0");
+                    return;
+                }
+                if(start_tick > f_state.t_land || end_tick > f_state.t_land){
+                    print("数值大于可计算的范围");
+                    return;
+                }
+                if(start_tick > end_tick){
+                    print("起始tick不能大于结束tick");
+                    return;
+                }
+                print(`\n=== Tick ${start_tick} 到 ${end_tick} 坐标 ===`);
+                for(let tick=start_tick; tick<=end_tick; tick++){
+                    const pos = get_pos(f_state.pearl, f_state.v0, tick);
+                    print(`tick ${tick}: X=${pos[0].toFixed(6)}, Y=${pos[1].toFixed(6)}, Z=${pos[2].toFixed(6)}`);
+                }
+            }else{
+                const tick_val = parseInt(val);
+                if(isNaN(tick_val)){
+                    print("输入无效，请输入有效的数字");
+                    return;
+                }
+                if(tick_val <=0){
+                    print("无效数值：tick必须大于0");
+                    return;
+                }
+                if(tick_val > f_state.t_land){
+                    print("数值大于可计算的范围");
+                    return;
+                }
+                const pos = get_pos(f_state.pearl, f_state.v0, tick_val);
+                print(`tick ${tick_val} 坐标：X=${pos[0].toFixed(6)}, Y=${pos[1].toFixed(6)}, Z=${pos[2].toFixed(6)}`);
+            }
+            print("\n请输入查询tick（整数），或'开始_结束'格式范围，或'R'返回主菜单：");
+        }
+    }catch(e){
+        print(`\n输入错误：${ERR_MSG.input_invalid}`);
+        f_state.active = false;
+        showMainMenu();
+    }
+}
+
+// ===================== 主交互 =====================
+let state = 'menu';
+let inputBuffer = {};
+let step = 0;
+
+function showMainMenu(){
+    state = 'menu';
+    step =0;
+    print("");
+    print("=".repeat(55));
+    print("璀璨15基岩版通用珍珠炮计算器 v15.3");
+    print("=".repeat(55));
+    print("  A = 已知落点反推TNT数量");
+    print("  B = 给定TNT算落点");
+    print("  C = 自定义火控架构求解");
+    print("  D = 退出程序");
+    print("  E = 帮助说明");
+    print("  F = 指定配置与轨迹查询");
+    print("  G = 拦截求解模式");
+    print("");
+    print("请输入选项(A/B/C/D/E/F/G)：");
+}
+
+function showHelp(){
+    print("============================欢迎使用璀璨15珍珠计算器 以下为使用教程============================");
+    print(" 1 //若您输入A 您还需要输入您的珍珠初始坐标与您的目的地坐标（TNT高度已自动设为珍珠眼部高度，纯平射），然后按下回车，此后，璀璨系统会自动预测您的珍珠路径并自动计算最优的R/L阵列的TNT组合");
+    print(" 2 //若您输入B 您还需要输入您的珍珠初始坐标、打角方向与目标落地Y高度（TNT高度已自动设为珍珠眼部高度，纯平射），然后按下回车，此后，璀璨系统会自动预测您的珍珠路径并自动计算该组合下的目的地坐标");
+    print(" 3 //若您输入C 这和程序A相同，但您还需要输入您的火控架构集合（若您不输入直接回车，则为空集），TNT高度同样自动设为珍珠眼部高度，此时璀璨系统会省略计算过程（空集时不省略）并在输出结果时表示成适合您配置ROM的形式");
+    print(" 4 //若您输入D 软件会关闭在windows上的窗口并停止运行");
+    print(" 5 //若您输入E将会弹出这些文字给予恁说明，并返回交互界面");
+    print(" 6 //若您输入F 您需要输入珍珠初始坐标、两阵列TNT数量、打角方向和目标落地Y坐标（TNT高度自动=珍珠眼部高度），程序将计算弹道、落点和飞行时间，之后您可以查询任意tick或tick范围内的珍珠坐标");
+    print(" 7 //若您输入G 拦截求解模式，输入珍珠初始XZ、拦截目标XZ；约束：抵达拦截点下落不超过1格，输出最小总TNT配置");
+    print("=============本计算器适用基岩版1.16.210及以上版本，由鎏龍霄飓开发，面向全体玩家开源=============");
+    print("");
+    showMainMenu();
+}
+
+function handleInput(cmd){
+    cmd = cmd.trim();
+    if(f_state.active){
+        function_F_input(cmd);
+        return;
+    }
+    if(state === 'menu'){
+        const mode = cmd.toUpperCase();
+        if(mode === 'D'){
+            print("\n程序已关闭");
+            return;
+        }else if(mode === 'E'){
+            showHelp();
+            return;
+        }else if(mode === 'A'){
+            state = 'A'; step=0;
+            print("\n==== A模式：落点反推TNT ====");
+            print("目的地X：");
+        }else if(mode === 'B'){
+            state = 'B'; step=0;
+            print("\n==== B模式：TNT正向算落点 ====");
+            print("左阵列TNT数量：");
+        }else if(mode === 'C'){
+            state = 'C'; step=0;
+            print("\n==== C模式 自定义火控架构 ====");
+            print("输入架构数字（空格分隔，直接回车无限制）：");
+        }else if(mode === 'F'){
+            function_F_start();
+        }else if(mode === 'G'){
+            state = 'G'; step=0;
+            print("\n==== G模式：拦截求解模式 ====");
+            print("珍珠初始 X：");
+        }else{
+            print("\n输入无效，请输入 A/B/C/D/E/F/G");
+            showMainMenu();
+        }
+        return;
+    }
+
+    if(state === 'A'){
+        try{
+            if(step ===0){
+                inputBuffer.dest_x = parseFloat(cmd); step=1; print("目的地Y：");
+            }else if(step ===1){
+                inputBuffer.dest_y = parseFloat(cmd); step=2; print("目的地Z：");
+            }else if(step ===2){
+                inputBuffer.dest_z = parseFloat(cmd); step=3; print("珍珠初始X：");
+            }else if(step ===3){
+                inputBuffer.pe_x = parseFloat(cmd); step=4; print("珍珠初始Y：");
+            }else if(step ===4){
+                inputBuffer.pe_y = parseFloat(cmd); step=5; print("珍珠初始Z：");
+            }else if(step ===5){
+                inputBuffer.pe_z = parseFloat(cmd);
+                const target = [inputBuffer.dest_x, inputBuffer.dest_y, inputBuffer.dest_z];
+                const pearl = [inputBuffer.pe_x, inputBuffer.pe_y, inputBuffer.pe_z];
+                const tnt_y = auto_tnt_y(inputBuffer.pe_y);
+                const direct = auto_dir(target, pearl);
+                const [tntL, tntR] = get_tnt_pair(pearl, tnt_y, direct);
+                print(`系统自动判定发射方向：${direct}`);
+                const [res, err_code] = solve_A(target, pearl, tntL, tntR);
+                if(res === null){
+                    print(`\n计算失败：${ERR_MSG[err_code]||'未知错误'}`);
+                }else{
+                    print(`\n【精度可用的组合方式】`);
+                    print(`${"排名".padEnd(4)}${"左TNT".padEnd(8)}${"右TNT".padEnd(8)}${"水平偏差(格)".padEnd(16)}`);
+                    print("-".repeat(36));
+                    for(let rank=0; rank<res.top5.length; rank++){
+                        const [err, nl, nr] = res.top5[rank];
+                        print(`  ${(rank+1).toString().padEnd(3)}${nl.toString().padEnd(8)}${nr.toString().padEnd(8)}${err.toFixed(6).padEnd(16)}`);
+                    }
+                    print(`\n==== A模式计算结果 ====`);
+                    print(`打角状态：${res.angle}`);
+                    print(`左阵列：${res.nL}颗  右阵列：${res.nR}颗`);
+                    print(`总TNT：${res.nL + res.nR}`);
+                    print(`飞行tick：${res.t_land.toFixed(2)} (${(res.t_land/20).toFixed(2)}秒)`);
+                    print(`落地坐标 X=${res.land_pos[0].toFixed(4)} Z=${res.land_pos[2].toFixed(4)}`);
+                    print(`水平偏差：${res.error.toFixed(4)}格`);
+                }
+                print("\n回车返回主菜单...");
+                step =6;
+            }else if(step ===6){
+                showMainMenu();
+            }
+        }catch(e){
+            print(`\n输入错误：${ERR_MSG.input_invalid}`);
+            showMainMenu();
+        }
+        return;
+    }
+
+    if(state === 'B'){
+        try{
+            if(step ===0){
+                inputBuffer.nl = parseInt(cmd); step=1; print("右阵列TNT数量：");
+            }else if(step ===1){
+                inputBuffer.nr = parseInt(cmd); step=2; print("珍珠初始X：");
+            }else if(step ===2){
+                inputBuffer.pe_x = parseFloat(cmd); step=3; print("珍珠初始Y：");
+            }else if(step ===3){
+                inputBuffer.pe_y = parseFloat(cmd); step=4; print("珍珠初始Z：");
+            }else if(step ===4){
+                inputBuffer.pe_z = parseFloat(cmd); step=5; print("输入打角方向(x+/x-/z+/z-)：");
+            }else if(step ===5){
+                inputBuffer.direct = cmd.trim().toLowerCase(); step=6; print("目标落地Y高度：");
+            }else if(step ===6){
+                const land_y = parseFloat(cmd);
+                const pearl = [inputBuffer.pe_x, inputBuffer.pe_y, inputBuffer.pe_z];
+                const tnt_y = auto_tnt_y(inputBuffer.pe_y);
+                const [tntL, tntR] = get_tnt_pair(pearl, tnt_y, inputBuffer.direct);
+                const res = solve_B_quiet(inputBuffer.nl, inputBuffer.nr, pearl, tntL, tntR, land_y);
+                if(res === null){
+                    print(`\n计算失败：${ERR_MSG["tnt_out_of_range"]}`);
+                }else{
+                    print(`\n==== B模式结果 ====`);
+                    print(`打角状态：${res.angle}`);
+                    print(`竖直运动：${res.y_state}`);
+                    print(`飞行tick：${res.t_land.toFixed(2)}`);
+                    print(`落点 X=${res.land_pos[0].toFixed(4)} Y=${res.land_pos[1].toFixed(4)} Z=${res.land_pos[2].toFixed(4)}`);
+                    print(`坐标差 |ΔX|=${res.delta_abs[0].toFixed(4)} |ΔZ|=${res.delta_abs[2].toFixed(4)}`);
+                }
+                print("\n回车返回主菜单...");
+                step =7;
+            }else if(step ===7){
+                showMainMenu();
+            }
+        }catch(e){
+            print(`\n输入错误：${ERR_MSG.input_invalid}`);
+            showMainMenu();
+        }
+        return;
+    }
+
+    if(state === 'C'){
+        try{
+            if(step ===0){
+                if(cmd === ""){
+                    inputBuffer.arch = null;
+                    print("火控架构集合为空集，程序将使用A算法");
+                }else{
+                    inputBuffer.arch = cmd.split(/\s+/).map(Number);
+                    inputBuffer.arch.sort((a,b)=>a-b);
+                    print(`加载架构集合：${inputBuffer.arch}`);
+                }
+                step =1; print("目的地X：");
+            }else if(step ===1){
+                inputBuffer.dest_x = parseFloat(cmd); step=2; print("目的地Y：");
+            }else if(step ===2){
+                inputBuffer.dest_y = parseFloat(cmd); step=3; print("目的地Z：");
+            }else if(step ===3){
+                inputBuffer.dest_z = parseFloat(cmd); step=4; print("珍珠初始X：");
+            }else if(step ===4){
+                inputBuffer.pe_x = parseFloat(cmd); step=5; print("珍珠初始Y：");
+            }else if(step ===5){
+                inputBuffer.pe_y = parseFloat(cmd); step=6; print("珍珠初始Z：");
+            }else if(step ===6){
+                inputBuffer.pe_z = parseFloat(cmd);
+                const target = [inputBuffer.dest_x, inputBuffer.dest_y, inputBuffer.dest_z];
+                const pearl = [inputBuffer.pe_x, inputBuffer.pe_y, inputBuffer.pe_z];
+                const tnt_y = auto_tnt_y(inputBuffer.pe_y);
+                const direct = auto_dir(target, pearl);
+                const [tntL, tntR] = get_tnt_pair(pearl, tnt_y, direct);
+                print(`自动发射方向：${direct}`);
+                let res, err;
+                if(inputBuffer.arch === null){
+                    [res, err] = solve_A(target, pearl, tntL, tntR);
+                }else{
+                    [res, err] = solve_C_fast(target, pearl, tntL, tntR, inputBuffer.arch);
+                }
+                if(res === null){
+                    print(`\n计算失败：${ERR_MSG[err]||'未知错误'}`);
+                }else{
+                    print(`\n==== C模式最优解 ====`);
+                    print(`打角状态：${res.angle}`);
+                    if(inputBuffer.arch !== null){
+                        print(`左：${res.nL} = ${res.expr_L}`);
+                        print(`右：${res.nR} = ${res.expr_R}`);
+                    }else{
+                        print(`左：${res.nL} 右：${res.nR}`);
+                    }
+                    print(`总TNT：${res.nL + res.nR}`);
+                    print(`飞行tick：${res.t_land.toFixed(2)}`);
+                    print(`落地坐标 X=${res.land_pos[0].toFixed(4)} Z=${res.land_pos[2].toFixed(4)}`);
+                    print(`水平偏差：${res.error.toFixed(4)}格`);
+                }
+                print("\n回车返回主菜单...");
+                step =7;
+            }else if(step ===7){
+                showMainMenu();
+            }
+        }catch(e){
+            print(`\n输入错误：${ERR_MSG.input_invalid}`);
+            showMainMenu();
+        }
+        return;
+    }
+
+    if(state === 'G'){
+        try{
+            if(step ===0){
+                inputBuffer.px = parseFloat(cmd); step=1; print("珍珠初始 Z：");
+            }else if(step ===1){
+                inputBuffer.pz = parseFloat(cmd); step=2; print("拦截目标 X：");
+            }else if(step ===2){
+                inputBuffer.ix = parseFloat(cmd); step=3; print("拦截目标 Z：");
+            }else if(step ===3){
+                inputBuffer.iz = parseFloat(cmd);
+                const [res, err] = solve_intercept(inputBuffer.px, inputBuffer.pz, inputBuffer.ix, inputBuffer.iz);
+                if(res === null){
+                    print(`\n计算失败：${ERR_MSG[err]||'未知错误'}`);
+                }else{
+                    print("\n==== G模式拦截计算结果 ====");
+                    print(`打角方向     ：${res.direct}`);
+                    print(`左阵列TNT    ：${res.nL}`);
+                    print(`右阵列TNT    ：${res.nR}`);
+                    print(`总TNT数量    ：${res.total}`);
+                    print(`经过拦截点Tick：${res.t_intercept.toFixed(2)}`);
+                    print(`经过拦截点秒数：${(res.t_intercept/20).toFixed(3)} s`);
+                    print(`到达拦截点下落：${res.drop.toFixed(3)} 格（上限1.0）`);
+                    const cx = res.check_pos[0], cz = res.check_pos[2];
+                    print(`模拟校验拦截坐标：X=${cx.toFixed(3)}  Z=${cz.toFixed(3)}`);
+                }
+                print("\n回车返回主菜单...");
+                step =4;
+            }else if(step ===4){
+                showMainMenu();
+            }
+        }catch(e){
+            print(`\n输入错误：${ERR_MSG.input_invalid}`);
+            showMainMenu();
+        }
+        return;
+    }
+}
+
+input.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
+        const cmd = input.value;
+        print("> " + cmd);
+        input.value = '';
+        handleInput(cmd);
+    }
+});
+
+showMainMenu();
+</script>
+</body>
+</html>
