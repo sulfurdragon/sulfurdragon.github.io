@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>璀璨15.3基岩版珍珠炮计算器</title>
+<title>璀璨16.2基岩版珍珠炮计算器</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
@@ -34,10 +34,40 @@ body {
     color: #fff;
     flex-shrink: 0;
 }
-#cmd-input {
+/* 璀璨16.2：输入提示与预测——输入栏提示层容器 */
+#input-wrap {
     flex: 1;
-    background: #000;
+    position: relative;
+    min-width: 0;
+}
+/* 灰色半透明提示层（占位提示 + 联想补全） */
+#suggestion {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 5px 10px;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    white-space: pre;
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+}
+#suggestion .typed {
     color: #fff;
+}
+#suggestion .pred {
+    color: rgba(255, 255, 255, 0.38);
+}
+#cmd-input {
+    position: relative;
+    width: 100%;
+    background: transparent;
+    color: transparent;
+    caret-color: #fff;
     border: none;
     outline: none;
     font-family: inherit;
@@ -58,23 +88,30 @@ body {
 <body>
 <div id="terminal"></div>
 <div id="input-line">
-    <span id="prompt">></span>
-    <input type="text" id="cmd-input" autofocus autocomplete="off">
+    <span id="prompt">user></span>
+    <div id="input-wrap">
+        <div id="suggestion"></div>
+        <input type="text" id="cmd-input" autofocus autocomplete="off">
+    </div>
 </div>
 <input type="file" id="file-input" accept=".json">
 <script>
-// 璀璨15.3 基岩版珍珠炮计算器 JS完整移植版，完全对应python v15.3
-const G = 0.025;
-const R = 8.0;
-const EYE = 0.25;
-const SINGLE_MAX = 0.90125;
-const SEARCH_RANGE = 1;
-const MAX_TICK = 20000;
-const MAX_SINGLE_ARRAY = 61440;
-const AXIS_EPS = 1e-4;
-const ERR_POS_EPS = 0.01;
-const FIX_PEARL_Y = 64.0;
-const MAX_DROP = 1.0;
+// 璀璨16.2 基岩版珍珠炮计算器
+// 物理常量（原始默认值）
+const DEFAULT_PHYS = {
+    G: 0.025,
+    R: 8.0,
+    EYE: 0.25,
+    SINGLE_MAX: 0.90125,
+    SEARCH_RANGE: 1,
+    MAX_TICK: 20000,
+    MAX_SINGLE_ARRAY: 61440,
+    AXIS_EPS: 1e-4,
+    ERR_POS_EPS: 0.01,
+    FIX_PEARL_Y: 64.0,
+    MAX_DROP: 1.0
+};
+let phys = JSON.parse(JSON.stringify(DEFAULT_PHYS));
 
 const ERR_MSG = {
     tnt_negative: "TNT数量不能为负数",
@@ -89,42 +126,228 @@ const ERR_MSG = {
     json_parse_err: "JSON解析失败，请检查配置文件格式",
     json_missing: "配置文件缺少珍珠坐标或火控架构字段",
 };
-
 const terminal = document.getElementById('terminal');
 const input = document.getElementById('cmd-input');
 const fileInput = document.getElementById('file-input');
+const promptSpan = document.getElementById('prompt');
+
+// ========== 璀璨16.2 输入提示与预测 ==========
+const suggestionEl = document.getElementById('suggestion');
+
+// 联想指令池（从语法角度构建，不新增/删改任何已知命令）
+const QUICK_MODES = ["A","B","C","D","E","F","G","H"];
+const CMD_POOL = ["help","save","name","json","physics","reset"];
+const JSON_SUB_POOL = ["help"];
+const PHYS_PARAM_POOL = ["G","EYE","SINGLE_MAX","SEARCH_RANGE","MAX_TICK","MAX_SINGLE_ARRAY","AXIS_EPS","ERR_POS_EPS","MAX_DROP"];
+
+let currentHint = "";
+let lastValue = "";  // 输入框上一次的值（用于手机端空格补全检测）
+
+function escapeHtml(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+// 计算联想提示（仅主界面/指令界面启用）
+// kind: none=无提示  complete=补全当前词  sub=下一级子内容  enter=完整无子集提示回车发送  invalid=不在可用范围
+function computePrediction(raw){
+    if(state !== 'menu' || f_state.active) return {kind:'none'};
+    const anal = raw.trimStart();
+    if(anal.length === 0) return {kind:'none'};
+    const hasTrailingSpace = /\s$/.test(anal);
+    const tokens = anal.split(/\s+/);
+    const prefix = hasTrailingSpace ? "" : tokens[tokens.length-1];
+    const lowerPrefix = prefix.toLowerCase();
+    const done = hasTrailingSpace ? tokens.filter(t=>t!=="") : tokens.slice(0, tokens.length-1);
+    const f0 = (done[0]||"").toLowerCase();
+
+    // 尾随空格：只按已输完的token判断，尾随空格不影响执行
+    if(hasTrailingSpace){
+        if(done.length === 1){
+            if(QUICK_MODES.map(m=>m.toLowerCase()).includes(f0)) return {kind:'enter', text:'＜回车发送＞'};
+            if(f0 === 'json') return {kind:'sub', text:'help'};
+            if(f0 === 'physics') return {kind:'sub', text:'set'};
+            if(CMD_POOL.includes(f0)) return {kind:'enter', text:'＜回车发送＞'};
+            return {kind:'invalid'};
+        }
+        if(done.length === 2){
+            if(f0 === 'json' && done[1].toLowerCase() === 'help') return {kind:'enter', text:'＜回车发送＞'};
+            if(f0 === 'physics' && done[1].toLowerCase() === 'set') return {kind:'sub', text: PHYS_PARAM_POOL[0]};
+            return {kind:'invalid'};
+        }
+        if(done.length >= 3){
+            if(f0 === 'json' && done[1].toLowerCase() === 'help') return {kind:'enter', text:'＜回车发送＞'};
+            if(f0 === 'physics' && done[1].toLowerCase() === 'set' && PHYS_PARAM_POOL.some(p=>p===done[2])) return {kind:'enter', text:'＜回车发送＞'};
+            if(f0 === 'physics' && done[1].toLowerCase() === 'set' && PHYS_PARAM_POOL.some(p=>p.toLowerCase()===done[2].toLowerCase())) return {kind:'enter', text:'＜回车发送＞'};
+            return {kind:'invalid'};
+        }
+        return {kind:'none'};
+    }
+
+    // 正在输入最后一个token
+    if(done.length === 0){
+        if(QUICK_MODES.map(m=>m.toLowerCase()).includes(lowerPrefix)) return {kind:'enter', text:'＜回车发送＞'};
+        const cand = CMD_POOL.find(c => c.toLowerCase().startsWith(lowerPrefix) && c.length > prefix.length);
+        if(cand) return {kind:'complete', text: cand.slice(prefix.length)};
+        if(CMD_POOL.includes(lowerPrefix)){
+            if(lowerPrefix === 'json') return {kind:'sub', text:'help'};
+            if(lowerPrefix === 'physics') return {kind:'sub', text:'set'};
+            return {kind:'enter', text:'＜回车发送＞'};
+        }
+        return {kind:'invalid'};
+    }
+
+    if(f0 === 'json'){
+        if(done.length === 1){
+            const cand = JSON_SUB_POOL.find(c => c.toLowerCase().startsWith(lowerPrefix) && c.length > prefix.length);
+            if(cand) return {kind:'complete', text: cand.slice(prefix.length)};
+            if(lowerPrefix === 'help') return {kind:'enter', text:'＜回车发送＞'};
+            return {kind:'invalid'};
+        }
+        if(done[1].toLowerCase() === 'help') return {kind:'enter', text:'＜回车发送＞'};
+        return {kind:'invalid'};
+    }
+    if(f0 === 'physics'){
+        if(done.length === 1){
+            if(lowerPrefix === 'set') return {kind:'sub', text: PHYS_PARAM_POOL[0]};
+            const cand = ['set'].find(c => c.toLowerCase().startsWith(lowerPrefix) && c.length > prefix.length);
+            if(cand) return {kind:'complete', text: cand.slice(prefix.length)};
+            return {kind:'invalid'};
+        }
+        if(done[1].toLowerCase() === 'set'){
+            if(done.length === 2){
+                const cand = PHYS_PARAM_POOL.find(c => c.startsWith(prefix) && c.length > prefix.length);
+                if(cand) return {kind:'complete', text: cand.slice(prefix.length)};
+                if(PHYS_PARAM_POOL.some(p => p === prefix)) return {kind:'enter', text:'＜回车发送＞'};
+                if(PHYS_PARAM_POOL.some(p => p.toLowerCase() === prefix.toLowerCase())) return {kind:'enter', text:'＜回车发送＞'};
+                return {kind:'invalid'};
+            }
+            if(PHYS_PARAM_POOL.some(p => p === done[2])) return {kind:'enter', text:'＜回车发送＞'};
+            if(PHYS_PARAM_POOL.some(p => p.toLowerCase() === done[2].toLowerCase())) return {kind:'enter', text:'＜回车发送＞'};
+            return {kind:'invalid'};
+        }
+        return {kind:'invalid'};
+    }
+    return {kind:'invalid'};
+}
+
+// 更新输入栏灰色提示层
+function updateSuggestion(){
+    const val = input.value;
+    if(val.length > 0){
+        const pred = computePrediction(val);
+        let html = `<span class="typed">${escapeHtml(val)}</span>`;
+        if(pred.kind === 'complete'){
+            html += `<span class="pred">${escapeHtml(pred.text)}</span>`;
+        }else if(pred.kind === 'sub' || pred.kind === 'enter'){
+            const sep = /\s$/.test(val) ? "" : " ";
+            html += `<span class="pred">${sep}${escapeHtml(pred.text)}</span>`;
+        }else if(pred.kind === 'invalid'){
+            const sep = /\s$/.test(val) ? "" : " ";
+            html += `<span class="pred">${sep}该指令未在可用指令范围内</span>`;
+        }
+        suggestionEl.innerHTML = html;
+    }else{
+        if(currentHint){
+            suggestionEl.innerHTML = `<span class="pred">${escapeHtml(currentHint)}</span>`;
+        }else{
+            suggestionEl.innerHTML = "";
+        }
+    }
+}
+
+// 空格/Tab 输入补齐：直接补全灰色提示内容
+function completeHint(){
+    const val = input.value;
+    if(val.length === 0) return false;
+    const pred = computePrediction(val);
+    if(pred.kind === 'complete'){
+        input.value = val + pred.text;
+        lastValue = input.value;
+        updateSuggestion();
+        return true;
+    }
+    if(pred.kind === 'sub'){
+        const sep = /\s$/.test(val) ? "" : " ";
+        input.value = val + sep + pred.text;
+        lastValue = input.value;
+        updateSuggestion();
+        return true;
+    }
+    return false;
+}
+
+// 设置占位提示（灰色半透明，与计算器打印的提示同步）
+function setInputHint(txt){
+    currentHint = txt;
+    updateSuggestion();
+}
+
+// 根据打印内容同步输入栏占位提示（提示以程序提示内容为准）
+function updateHintFromPrint(text){
+    const t = text.trim();
+    if(t === "") return;
+    if(t === "请输入（A/B/C/D/E/F/G/H）或命令 输入help查看支持的命令"){
+        setInputHint("请输入模式或指令");
+        return;
+    }
+    // 以“：”结尾的是输入提示，优先采用，与程序提示保持一致
+    if(t.endsWith("：")){
+        if(t === "请输入查询tick（整数），或'开始_结束'格式范围，或'R'返回主菜单："){
+            setInputHint("请输入查询tick或tick范围");
+            return;
+        }
+        let hint = t.slice(0, -1).replace(/[＜＞]/g, "");
+        if(!/^请输入/.test(hint) && !/^输入/.test(hint)){
+            hint = "请输入" + hint;
+        }
+        setInputHint(hint);
+        return;
+    }
+    if(t.includes("输入save返回主界面")){
+        setInputHint("输入save保存并回到主界面");
+        return;
+    }
+    if(/回车/.test(t)){
+        setInputHint("回车返回主界面");
+        return;
+    }
+}
 
 // ========== 新增全局配置存储 ==========
 let configData = null;
 let configFileName = "无";
+let userName = "user";
+
+function setPromptText(txt){
+    userName = txt;
+    promptSpan.textContent = userName+">";
+}
 
 function print(text = "") {
     terminal.textContent += text + "\n";
     terminal.scrollTop = terminal.scrollHeight;
+    updateHintFromPrint(text);
 }
 
 function auto_tnt_y(pe_y) {
-    return pe_y + EYE;
+    return pe_y + phys.EYE;
 }
-
 function S(t) {
     return t;
 }
-
 function T(t) {
     return t * (t - 1.0) / 2.0;
 }
-
 function calc_thrust(pearl_pos, tnt_pos) {
     const [px, py, pz] = pearl_pos;
     const [tx, ty, tz] = tnt_pos;
-    const eye_y = py + EYE;
+    const eye_y = py + phys.EYE;
     const dx = tx - px;
     const dy = ty - eye_y;
     const dz = tz - pz;
     const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-    if (dist >= R) return [0.0, 0.0, 0.0];
-    const mag = (1.0 - dist / R) * SINGLE_MAX;
+    if (dist >= phys.R) return [0.0, 0.0, 0.0];
+    const mag = (1.0 - dist / phys.R) * phys.SINGLE_MAX;
     const dir_x = px - tx;
     const dir_y = eye_y - ty;
     const dir_z = pz - tz;
@@ -132,26 +355,24 @@ function calc_thrust(pearl_pos, tnt_pos) {
     if (dir_dist < 1e-12) return [0.0, 0.0, 0.0];
     return [mag * dir_x / dir_dist, mag * dir_y / dir_dist, mag * dir_z / dir_dist];
 }
-
 function get_pos(p0, v0, t) {
     const st = S(t);
     const tt = T(t);
     return [
         p0[0] + v0[0] * st,
-        p0[1] + v0[1] * st - G * tt,
+        p0[1] + v0[1] * st - phys.G * tt,
         p0[2] + v0[2] * st
     ];
 }
-
 function find_land_time(p0, v0, y_target) {
     if (p0[1] <= y_target && v0[1] <= 0) return 0.0;
     let t_high = 1.0;
     for (let i = 0; i < 50; i++) {
         if (get_pos(p0, v0, t_high)[1] <= y_target) break;
         t_high *= 2;
-        if (t_high > MAX_TICK) return null;
+        if (t_high > phys.MAX_TICK) return null;
     }
-    if (t_high > MAX_TICK) return null;
+    if (t_high > phys.MAX_TICK) return null;
     let t_low = 0.0;
     for (let i = 0; i < 120; i++) {
         const t_mid = (t_low + t_high) / 2;
@@ -163,13 +384,11 @@ function find_land_time(p0, v0, y_target) {
     }
     return (t_low + t_high) / 2;
 }
-
 function y_motion_state(v0y) {
     if (v0y > 0.001) return "上抛（先升后降）";
     else if (v0y < -0.001) return "下偏（快速下坠）";
     return "平射（重力缓慢压低）";
 }
-
 function angle_state(pearl_pos, tnt_L, tnt_R, nL, nR) {
     const [px, , pz] = pearl_pos;
     const [tlx, , tlz] = tnt_L;
@@ -203,7 +422,6 @@ function angle_state(pearl_pos, tnt_L, tnt_R, nL, nR) {
     }
     return `主方向${main}，${side}`;
 }
-
 function auto_dir(target, pearl) {
     const dx = target[0] - pearl[0];
     const dz = target[2] - pearl[2];
@@ -213,7 +431,6 @@ function auto_dir(target, pearl) {
         return dz > 0 ? "z+" : "z-";
     }
 }
-
 function get_tnt_pair(pearl, tnt_y, direct) {
     const [px, py, pz] = pearl;
     let tl, tr;
@@ -240,7 +457,6 @@ function get_tnt_pair(pearl, tnt_y, direct) {
     }
     return [tl, tr];
 }
-
 function solve_B(nL, nR, pearl, tntL, tntR, y_land) {
     if (nL < 0 || nR < 0) return [null, "tnt_negative"];
     const vL = calc_thrust(pearl, tntL);
@@ -264,7 +480,6 @@ function solve_B(nL, nR, pearl, tntL, tntR, y_land) {
         angle: angle_state(pearl, tntL, tntR, nL, nR)
     }, null];
 }
-
 function solve_float_opt(target, pearl, tntL, tntR) {
     const [tx, ty, tz] = target;
     const vL = calc_thrust(pearl, tntL);
@@ -310,7 +525,6 @@ function solve_float_opt(target, pearl, tntL, tntR) {
     }
     return [nLf, nRf, t_est];
 }
-
 function solve_A(target, pearl, tntL, tntR) {
     const [tx, ty, tz] = target;
     const vL = calc_thrust(pearl, tntL);
@@ -324,10 +538,10 @@ function solve_A(target, pearl, tntL, tntR) {
     if (nLf === null) return [null, "tnt_out_of_range"];
     const nL0 = Math.round(nLf);
     const nR0 = Math.round(nRf);
-    const sL = Math.max(0, nL0 - SEARCH_RANGE);
-    const eL = nL0 + SEARCH_RANGE;
-    const sR = Math.max(0, nR0 - SEARCH_RANGE);
-    const eR = nR0 + SEARCH_RANGE;
+    const sL = Math.max(0, nL0 - phys.SEARCH_RANGE);
+    const eL = nL0 + phys.SEARCH_RANGE;
+    const sR = Math.max(0, nR0 - phys.SEARCH_RANGE);
+    const eR = nR0 + phys.SEARCH_RANGE;
     let best_err = Infinity;
     let best = null;
     let bnL = 0, bnR = 0;
@@ -357,7 +571,6 @@ function solve_A(target, pearl, tntL, tntR) {
     best.top5 = top5;
     return [best,null];
 }
-
 function generate_arch_sum(arch) {
     let subsets = [[0, "0"]];
     for(const num of arch){
@@ -375,7 +588,6 @@ function generate_arch_sum(arch) {
     }
     return Object.entries(unique).sort((a,b)=>Number(a[0])-Number(b[0]));
 }
-
 function binary_search_nearest(sorted_list, target) {
     let left = 0;
     let right = sorted_list.length;
@@ -386,7 +598,6 @@ function binary_search_nearest(sorted_list, target) {
     }
     return left;
 }
-
 function solve_C_fast(target, pearl, tntL, tntR, arch) {
     const vL = calc_thrust(pearl, tntL);
     const vR = calc_thrust(pearl, tntR);
@@ -424,7 +635,7 @@ function solve_C_fast(target, pearl, tntL, tntR, arch) {
         for(let idx=start; idx<end; idx++){
             const [nr_val, er_str] = right_pool[idx];
             if(Number(nl_val)===0 && Number(nr_val)===0) continue;
-            const [res] = solve_C_fast.__solveBcache(Number(nl_val),Number(nr_val),pearl,tntL,tntR,ty) || solve_B(Number(nl_val), Number(nr_val), pearl, tntL, tntR, ty);
+            const [res] = solve_B(Number(nl_val), Number(nr_val), pearl, tntL, tntR, ty);
             if(!res) continue;
             const err = Math.sqrt((res.land_pos[0]-tx)**2 + (res.land_pos[2]-tz)**2);
             if(err < best_err){
@@ -446,12 +657,9 @@ function solve_C_fast(target, pearl, tntL, tntR, arch) {
     return [best_data, null];
 }
 
-solve_C_fast.__solveBcache = solve_B;
-
 function get_drop_height(t) {
-    return G * T(t);
+    return phys.G * T(t);
 }
-
 function solve_t_for_target(vx, vz, dx_target, dz_target) {
     const eps = 1e-12;
     let candidates_t = [];
@@ -467,16 +675,15 @@ function solve_t_for_target(vx, vz, dx_target, dz_target) {
     for(const t of candidates_t){
         const pred_dx = vx * t;
         const pred_dz = vz * t;
-        if(Math.hypot(pred_dx-dx_target, pred_dz-dz_target) < ERR_POS_EPS){
+        if(Math.hypot(pred_dx-dx_target, pred_dz-dz_target) < phys.ERR_POS_EPS){
             valid_t = t;
             break;
         }
     }
     return valid_t;
 }
-
 function solve_intercept(px, pz, ix, iz) {
-    const py = FIX_PEARL_Y;
+    const py = phys.FIX_PEARL_Y;
     const pearl_xyz = [px, py, pz];
     const dX = ix - px;
     const dZ = iz - pz;
@@ -492,22 +699,22 @@ function solve_intercept(px, pz, ix, iz) {
     }
     const a = vL[0], c = vL[2];
     const b = vR[0], d = vR[2];
-    const is_axis_x = Math.abs(dZ) < AXIS_EPS;
-    const is_axis_z = Math.abs(dX) < AXIS_EPS;
+    const is_axis_x = Math.abs(dZ) < phys.AXIS_EPS;
+    const is_axis_z = Math.abs(dX) < phys.AXIS_EPS;
     if(is_axis_x || is_axis_z){
         let candidate_list = [];
-        for(let M=1; M<=MAX_SINGLE_ARRAY; M++){
+        for(let M=1; M<=phys.MAX_SINGLE_ARRAY; M++){
             const N = M;
             const v0x = M*a + N*b;
             const v0z = M*c + N*d;
             if(Math.hypot(v0x, v0z) <1e-10) continue;
             const t = solve_t_for_target(v0x, v0z, dX, dZ);
-            if(t===null || !(0<t && t<MAX_TICK)) continue;
+            if(t===null || !(0<t && t<phys.MAX_TICK)) continue;
             const drop = get_drop_height(t);
-            if(drop > MAX_DROP) continue;
+            if(drop > phys.MAX_DROP) continue;
             const pos_check = get_pos(pearl_xyz, [v0x,0.0,v0z], t);
             const err = Math.hypot(pos_check[0]-ix, pos_check[2]-iz);
-            if(err < ERR_POS_EPS){
+            if(err < phys.ERR_POS_EPS){
                 candidate_list.push({
                     nL:M, nR:N, total:M+N, t_intercept:t, drop:drop,
                     v0:[v0x,0.0,v0z], check_pos:pos_check, direct:direct
@@ -523,16 +730,16 @@ function solve_intercept(px, pz, ix, iz) {
     if(Math.abs(det) < eps_det){
         const dot = a*dX + c*dZ;
         if(dot <=1e-10) return [null,"intercept_no_solution_basis"];
-        for(let S=1; S<=MAX_SINGLE_ARRAY; S++){
+        for(let S=1; S<=phys.MAX_SINGLE_ARRAY; S++){
             const v0x = S*a;
             const v0z = S*c;
             const t = solve_t_for_target(v0x, v0z, dX, dZ);
-            if(t===null || !(0<t && t<MAX_TICK)) continue;
+            if(t===null || !(0<t && t<phys.MAX_TICK)) continue;
             const drop = get_drop_height(t);
-            if(drop>MAX_DROP) continue;
+            if(drop>phys.MAX_DROP) continue;
             const pos_check = get_pos(pearl_xyz, [v0x,0.0,v0z], t);
             const err = Math.hypot(pos_check[0]-ix, pos_check[2]-iz);
-            if(err < ERR_POS_EPS){
+            if(err < phys.ERR_POS_EPS){
                 return [{
                     nL:S, nR:0, total:S, t_intercept:t, drop:drop,
                     v0:[v0x,0.0,v0z], check_pos:pos_check, direct:direct
@@ -548,37 +755,37 @@ function solve_intercept(px, pz, ix, iz) {
     const m_ratio = M0 / ratio_sum;
     const n_ratio = N0 / ratio_sum;
     let found = null;
-    for(let totalS=2; totalS <= MAX_SINGLE_ARRAY*2; totalS++){
+    for(let totalS=2; totalS <= phys.MAX_SINGLE_ARRAY*2; totalS++){
         let Mc = Math.round(totalS * m_ratio);
         let Nc = Math.round(totalS * n_ratio);
         Mc = Math.max(1, Mc);
         Nc = Math.max(1, Nc);
-        if(Mc>MAX_SINGLE_ARRAY || Nc>MAX_SINGLE_ARRAY) continue;
+        if(Mc>phys.MAX_SINGLE_ARRAY || Nc>phys.MAX_SINGLE_ARRAY) continue;
         const v0x = Mc*a + Nc*b;
         const v0z = Mc*c + Nc*d;
         const dot = v0x*dX + v0z*dZ;
         if(dot <=1e-10) continue;
         const t = solve_t_for_target(v0x, v0z, dX, dZ);
-        if(t===null || !(0<t && t<MAX_TICK)) continue;
+        if(t===null || !(0<t && t<phys.MAX_TICK)) continue;
         const drop = get_drop_height(t);
-        if(drop>MAX_DROP) continue;
+        if(drop>phys.MAX_DROP) continue;
         const pos_check = get_pos(pearl_xyz, [v0x,0.0,v0z], t);
         const err = Math.hypot(pos_check[0]-ix, pos_check[2]-iz);
-        if(err < ERR_POS_EPS){
-            for(let dL=-SEARCH_RANGE; dL<=SEARCH_RANGE; dL++){
-                for(let dR=-SEARCH_RANGE; dR<=SEARCH_RANGE; dR++){
+        if(err < phys.ERR_POS_EPS){
+            for(let dL=-phys.SEARCH_RANGE; dL<=phys.SEARCH_RANGE; dL++){
+                for(let dR=-phys.SEARCH_RANGE; dR<=phys.SEARCH_RANGE; dR++){
                     const m_t = Mc + dL;
                     const n_t = Nc + dR;
-                    if(m_t<1 || n_t<1 || m_t>MAX_SINGLE_ARRAY || n_t>MAX_SINGLE_ARRAY) continue;
+                    if(m_t<1 || n_t<1 || m_t>phys.MAX_SINGLE_ARRAY || n_t>phys.MAX_SINGLE_ARRAY) continue;
                     const vx_t = m_t*a + n_t*b;
                     const vz_t = m_t*c + n_t*d;
                     const t_t = solve_t_for_target(vx_t, vz_t, dX, dZ);
-                    if(t_t===null || !(0<t_t && t_t<MAX_TICK)) continue;
+                    if(t_t===null || !(0<t_t && t_t<phys.MAX_TICK)) continue;
                     const drop_t = get_drop_height(t_t);
-                    if(drop_t>MAX_DROP) continue;
+                    if(drop_t>phys.MAX_DROP) continue;
                     const pos_t = get_pos([px,py,pz],[vx_t,0.0,vz_t],t_t);
                     const err_t = Math.hypot(pos_t[0]-ix, pos_t[2]-iz);
-                    if(err_t < ERR_POS_EPS){
+                    if(err_t < phys.ERR_POS_EPS){
                         found = {
                             nL:m_t, nR:n_t, total:m_t+n_t, t_intercept:t_t, drop:drop_t,
                             v0:[vx_t,0.0,vz_t], check_pos:pos_t, direct:direct
@@ -592,7 +799,6 @@ function solve_intercept(px, pz, ix, iz) {
     if(found === null) return [null,"intercept_tick_too_large"];
     return [found, null];
 }
-
 let f_state = {
     active: false,
     step:0,
@@ -600,12 +806,10 @@ let f_state = {
     v0:null,
     t_land:0
 };
-
 function function_F_start(){
     print("\n==== F模式：指定TNT配置与轨迹查询 ====");
     f_state.active = true;
     f_state.step =0;
-    // 如果存在配置，直接填充珍珠坐标
     if(configData){
         f_state.pe_x = configData.pearlX;
         f_state.pe_y = configData.pearlY;
@@ -617,7 +821,6 @@ function function_F_start(){
         print("珍珠初始X：");
     }
 }
-
 function function_F_input(val){
     const step = f_state.step;
     try{
@@ -725,7 +928,6 @@ function function_F_input(val){
         showMainMenu();
     }
 }
-
 let state = 'menu';
 let inputBuffer = {};
 let step = 0;
@@ -733,25 +935,26 @@ let step = 0;
 function showMainMenu() {
     state = 'menu';
     step = 0;
+    f_state.active = false;
     print("");
     print("=".repeat(55));
-    print("璀璨15.3基岩版通用珍珠炮计算器 v15.3");
+    print("璀璨16.2珍珠计算器");
     print("=".repeat(55));
     print(`配置文件读取状态：${configFileName}`);
-    print("  A = 已知落点反推TNT数量");
-    print("  B = 给定TNT算落点");
-    print("  C = 自定义火控架构求解");
-    print("  D = 退出程序");
-    print("  E = 帮助说明");
-    print("  F = 指定配置与轨迹查询");
-    print("  G = 拦截求解模式");
-    print("  H = 读取配置文件");
+    print("  A=已知落点反推TNT数量");
+    print("  B=给定TNT算落点");
+    print("  C=自定义火控架构求解");
+    print("  D=退出程序");
+    print("  E=帮助说明");
+    print("  F=指定配置与轨迹查询");
+    print("  G=拦截求解模式");
+    print("  H=读取配置文件");
     print("");
-    print("请输入选项(A/B/C/D/E/F/G/H)：");
+    print("请输入（A/B/C/D/E/F/G/H）或命令 输入help查看支持的命令");
 }
 
 function showHelp() {
-    print("============================欢迎使用璀璨15基岩版珍珠计算器 以下为使用教程============================");
+    print("============================欢迎使用璀璨16.2基岩版珍珠计算器 以下为使用教程============================");
     print(" 1 //若您输入A 您还需要输入您的珍珠初始坐标与您的目的地坐标（TNT高度已自动设为珍珠眼部高度，纯平射），然后按下回车，此后，璀璨系统会自动预测您的珍珠路径并自动计算最优的R/L阵列的TNT组合");
     print(" 2 //若您输入B 您还需要输入您的珍珠初始坐标、打角方向与目标落地Y高度（TNT高度已自动设为珍珠眼部高度，纯平射），然后按下回车，此后，璀璨系统会自动预测您的珍珠路径并自动计算该组合下的目的地坐标");
     print(" 3 //若您输入C 这和程序A相同，但您还需要输入您的火控架构集合（若您不输入直接回车，则为空集），TNT高度同样自动设为珍珠眼部高度，此时璀璨系统会省略计算过程（空集时不省略）并在输出结果时表示成适合您配置ROM的形式");
@@ -765,20 +968,21 @@ function showHelp() {
     showMainMenu();
 }
 
-// ========= 文件上传处理 =========
+// ========= 文件上传处理 修复Android打包相册问题、Windows文件选择后光标消失 =========
 fileInput.onchange = async function(e){
     const file = e.target.files[0];
     if(!file){
+        setTimeout(()=>{input.focus();},100);
         showMainMenu();
         return;
     }
     try{
         const txt = await file.text();
         const jsonObj = JSON.parse(txt);
-        //校验字段
         if(!("pearlX" in jsonObj) || !("pearlY" in jsonObj) || !("pearlZ" in jsonObj) || !("arch" in jsonObj)){
             print(`\n${ERR_MSG.json_missing}`);
             fileInput.value="";
+            setTimeout(()=>{input.focus();},100);
             showMainMenu();
             return;
         }
@@ -791,93 +995,184 @@ fileInput.onchange = async function(e){
         configFileName="无";
     }
     fileInput.value="";
+    setTimeout(()=>{input.focus();},100);
     showMainMenu();
+};
+
+function openFileChooser(){
+    if(window.plus){
+        try{
+            const Intent = plus.android.importClass("android.content.Intent");
+            const intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("application/json");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            plus.android.currentContext.startActivityForResult(intent,1001);
+        }catch(ex){
+            fileInput.click();
+        }
+    }else{
+        fileInput.click();
+    }
+}
+
+function showHelpCommand(){
+    print("=====可用指令表=====");
+    print("help=查看可用指令表");
+    print("save=保存设置并回到主界面");
+    print("name=修改用户名");
+    print("json=查看配置文件内容");
+    print("json help=获取配置文件事例文本");
+    print("physics=查看全部物理参数");
+    print("physics set 英文参数名 参数=修改指定物理参数");
+    print("reset=重置计算器全部参数");
+    print("＜输入save返回主界面＞");
+}
+
+function showPhysicsList(){
+    print("====全部物理常量====");
+    print(`G = ${phys.G}（基岩版末影珍珠重力加速度）`);
+    print(`EYE = ${phys.EYE}（珍珠眼部偏移高度，爆炸推力受力点偏移量）`);
+    print(`SINGLE_MAX = ${phys.SINGLE_MAX}（单颗TNT能够给到珍珠的极限速度增量）`);
+    print(`SEARCH_RANGE = ${phys.SEARCH_RANGE}（TNT数量搜索时的误差余量范围）`);
+    print(`MAX_TICK = ${phys.MAX_TICK}（珍珠弹道仿真最大允许游戏刻）`);
+    print(`MAX_SINGLE_ARRAY = ${phys.MAX_SINGLE_ARRAY}（拦截模式火控阵列单方向TNT最大上限颗数）`);
+    print(`AXIS_EPS = 1e-4（拦截模式坐标轴方向浮点数判定精度）`);
+    print(`ERR_POS_EPS = ${phys.ERR_POS_EPS}（拦截模式落点位置误差允许阈值）`);
+    print(`MAX_DROP = ${phys.MAX_DROP}（拦截模式珍珠发射时允许的最大初始下落偏移量）`);
+    print("＜输入physics set设置物理常量，输入save返回主界面＞");
+}
+
+function saveAllSettings(){
+    try{
+        localStorage.setItem("phys",JSON.stringify(phys));
+        localStorage.setItem("userName",userName);
+    }catch(e){}
+    showMainMenu();
+}
+
+function resetAll(){
+    phys = JSON.parse(JSON.stringify(DEFAULT_PHYS));
+    configData = null;
+    configFileName = "无";
+    setPromptText("user");
+    try{localStorage.removeItem("phys");localStorage.removeItem("userName");}catch(e){}
+    terminal.textContent="";
+    showMainMenu();
+}
+
+function handleCommand(cmd){
+    const parts = cmd.trim().split(/\s+/);
+    const first = parts[0].toLowerCase();
+    if(first === "help"){
+        showHelpCommand();
+        return true;
+    }else if(first === "save"){
+        saveAllSettings();
+        return true;
+    }else if(first === "name"){
+        print("请输入新用户名：");
+        state="name_input";
+        return true;
+    }else if(first === "json"){
+        if(parts.length>=2 && parts[1].toLowerCase()==="help"){
+            print("{");
+            print('    "pearlX": 珍珠初始X,');
+            print('    "pearlY": 珍珠初始Y,');
+            print('    "pearlZ": 珍珠初始Z,');
+            print('    "arch": [火,控,架,构]');
+            print("}");
+            print("＜回车返回主界面＞");
+            state="wait_return_menu";
+        }else{
+            if(!configData){
+                print("当前未加载配置文件");
+            }else{
+                print(configFileName);
+                print("珍珠初始XYZ：");
+                print(configData.pearlX);
+                print(configData.pearlY);
+                print(configData.pearlZ);
+                print("火控架构");
+                print(configData.arch.join(" "));
+            }
+            print("＜回车返回主界面＞");
+            state="wait_return_menu";
+        }
+        return true;
+    }else if(first === "physics"){
+        if(parts.length>=3 && parts[1].toLowerCase()==="set"){
+            const pname = parts[2];
+            const pval = parseFloat(parts[3]);
+            const writableKeys = ["G","EYE","SINGLE_MAX","SEARCH_RANGE","MAX_TICK","MAX_SINGLE_ARRAY","AXIS_EPS","ERR_POS_EPS","MAX_DROP"];
+            if(!writableKeys.includes(pname)){
+                print("错误：该物理参数不可修改或不存在");
+                showPhysicsList();
+                return true;
+            }
+            if(isNaN(pval)){
+                print("错误：数值无效");
+                showPhysicsList();
+                return true;
+            }
+            phys[pname] = pval;
+            print("＜物理量修改成功＞");
+            showPhysicsList();
+        }else{
+            showPhysicsList();
+        }
+        return true;
+    }else if(first === "reset"){
+        resetAll();
+        return true;
+    }else{
+        print(`您输入的命令为未知命名，请发送help查询可用指令表`);
+        print("＜回车返回主界面＞");
+        state="wait_return_menu";
+        return true;
+    }
 }
 
 function handleInput(cmd) {
     cmd = cmd.trim();
+    if(state === "name_input"){
+        setPromptText(cmd);
+        print("名称修改成功");
+        print("＜回车返回主界面＞");
+        state="wait_return_menu";
+        return;
+    }
+    if(state === "wait_return_menu"){
+        showMainMenu();
+        return;
+    }
     if(f_state.active){
         function_F_input(cmd);
         return;
     }
     if(state === 'menu'){
-        const mode = cmd.toUpperCase();
-        if(mode === 'D'){
-            print("\n程序已关闭");
+        const upperCmd = cmd.toUpperCase();
+        const menuOpts = ["A","B","C","D","E","F","G","H"];
+        if(menuOpts.includes(upperCmd)){
+            handleMenuSelect(upperCmd);
             return;
-        }else if(mode === 'E'){
-            showHelp();
-            return;
-        }else if(mode === 'H'){
-            print("\n==== H模式：读取配置JSON ====");
-            print("请在弹出的文件管理器选择json配置文件");
-            fileInput.click();
-            return;
-        }else if(mode === 'A'){
-            state = 'A';
-            step =0;
-            print("\n==== A模式：落点反推TNT ====");
-            if(configData){
-                print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
-                inputBuffer.pe_x = configData.pearlX;
-                inputBuffer.pe_y = configData.pearlY;
-                inputBuffer.pe_z = configData.pearlZ;
-                print("目的地X：");
-                step =0;
-            }else{
-                print("目的地X：");
-            }
-        }else if(mode === 'B'){
-            state = 'B';
-            step =0;
-            print("\n==== B模式：TNT正向算落点 ====");
-            if(configData){
-                print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
-                inputBuffer.pe_x = configData.pearlX;
-                inputBuffer.pe_y = configData.pearlY;
-                inputBuffer.pe_z = configData.pearlZ;
-                print("左阵列TNT数量：");
-                step =0;
-            }else{
-                print("左阵列TNT数量：");
-            }
-        }else if(mode === 'C'){
-            state = 'C';
-            step =0;
-            print("\n==== C模式 自定义火控架构 ====");
-            if(configData){
-                inputBuffer.arch = configData.arch;
-                print(`已加载火控架构集合：${inputBuffer.arch}`);
-                print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
-                inputBuffer.pe_x = configData.pearlX;
-                inputBuffer.pe_y = configData.pearlY;
-                inputBuffer.pe_z = configData.pearlZ;
-                print("目的地X：");
-                step =1;
-            }else{
-                print("输入架构数字（空格分隔，直接回车无限制）：");
-            }
-        }else if(mode === 'F'){
-            function_F_start();
-        }else if(mode === 'G'){
-            state = 'G';
-            step =0;
-            print("\n==== G模式：拦截求解模式 ====");
-            if(configData){
-                print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
-                inputBuffer.px = configData.pearlX;
-                inputBuffer.pz = configData.pearlZ;
-                print("拦截目标 X：");
-                step =2;
-            }else{
-                print("珍珠初始 X：");
-            }
-        }else{
-            print("\n输入无效，请输入 A/B/C/D/E/F/G/H");
-            showMainMenu();
+        }
+        if(cmd.length>0){
+            handleCommand(cmd);
         }
         return;
     }
+    // 处于子模式（A/B/C/G输入坐标阶段），禁止输入A‑H
+    const subModes = ["A","B","C","G"];
+    if(subModes.includes(state)){
+        const upperCmd = cmd.toUpperCase();
+        if(["A","B","C","D","E","F","G","H"].includes(upperCmd)){
+            print("请保存设置后再进行计算");
+            print("＜回车保存并退出>");
+            state="wait_return_menu";
+            return;
+        }
+    }
+
     if(state === 'A'){
         try{
             if(step ===0){
@@ -890,7 +1185,6 @@ function handleInput(cmd) {
                 print("目的地Z：");
             }else if(step ===2){
                 inputBuffer.dest_z = parseFloat(cmd);
-                // 如果没有配置才继续输入珍珠坐标，有配置直接跳到计算
                 if(configData){
                     step =5;
                 }else{
@@ -976,7 +1270,6 @@ function handleInput(cmd) {
             }else if(step ===1){
                 inputBuffer.nr = parseInt(cmd);
                 step =2;
-                // 有配置跳过珍珠坐标输入
                 if(configData){
                     inputBuffer.pe_x = configData.pearlX;
                     inputBuffer.pe_y = configData.pearlY;
@@ -1030,7 +1323,15 @@ function handleInput(cmd) {
     }
     if(state === 'C'){
         try{
-            if(step ===1){
+            if(step ===0){
+                if(cmd.trim()===""){
+                    inputBuffer.arch = [];
+                }else{
+                    inputBuffer.arch = cmd.trim().split(/\s+/).map(x=>parseInt(x));
+                }
+                step =1;
+                print("目的地X：");
+            }else if(step ===1){
                 inputBuffer.dest_x = parseFloat(cmd);
                 step =2;
                 print("目的地Y：");
@@ -1074,7 +1375,15 @@ function handleInput(cmd) {
     }
     if(state === 'G'){
         try{
-            if(step ===2){
+            if(step ===0){
+                inputBuffer.px = parseFloat(cmd);
+                step =1;
+                print("珍珠初始 Z：");
+            }else if(step ===1){
+                inputBuffer.pz = parseFloat(cmd);
+                step =2;
+                print("拦截目标 X：");
+            }else if(step ===2){
                 inputBuffer.ix = parseFloat(cmd);
                 step =3;
                 print("拦截目标 Z：");
@@ -1108,16 +1417,143 @@ function handleInput(cmd) {
     }
 }
 
-// 绑定回车事件
+function handleMenuSelect(mode){
+    inputBuffer={};
+    step=0;
+    if(mode === 'D'){
+        print("\n程序已关闭");
+        return;
+    }else if(mode === 'E'){
+        showHelp();
+        return;
+    }else if(mode === 'H'){
+        print("\n==== H模式：读取配置JSON ====");
+        print("请在弹出的文件管理器选择json配置文件");
+        openFileChooser();
+        return;
+    }else if(mode === 'A'){
+        state = 'A';
+        step =0;
+        print("\n==== A模式：落点反推TNT ====");
+        if(configData){
+            print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
+            inputBuffer.pe_x = configData.pearlX;
+            inputBuffer.pe_y = configData.pearlY;
+            inputBuffer.pe_z = configData.pearlZ;
+            print("目的地X：");
+            step =0;
+        }else{
+            print("目的地X：");
+        }
+    }else if(mode === 'B'){
+        state = 'B';
+        step =0;
+        print("\n==== B模式：TNT正向算落点 ====");
+        if(configData){
+            print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
+            inputBuffer.pe_x = configData.pearlX;
+            inputBuffer.pe_y = configData.pearlY;
+            inputBuffer.pe_z = configData.pearlZ;
+            print("左阵列TNT数量：");
+            step =0;
+        }else{
+            print("左阵列TNT数量：");
+        }
+    }else if(mode === 'C'){
+        state = 'C';
+        step =0;
+        print("\n==== C模式 自定义火控架构 ====");
+        if(configData){
+            inputBuffer.arch = configData.arch;
+            print(`已加载火控架构集合：${inputBuffer.arch}`);
+            print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
+            inputBuffer.pe_x = configData.pearlX;
+            inputBuffer.pe_y = configData.pearlY;
+            inputBuffer.pe_z = configData.pearlZ;
+            print("目的地X：");
+            step =1;
+        }else{
+            print("输入架构数字（空格分隔，直接回车无限制）：");
+        }
+    }else if(mode === 'F'){
+        function_F_start();
+    }else if(mode === 'G'){
+        state = 'G';
+        step =0;
+        print("\n==== G模式：拦截求解模式 ====");
+        if(configData){
+            print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
+            inputBuffer.px = configData.pearlX;
+            inputBuffer.pz = configData.pearlZ;
+            print("拦截目标 X：");
+            step =2;
+        }else{
+            print("珍珠初始 X：");
+        }
+    }
+}
+
+// 绑定回车/空格/Tab事件（璀璨16.2：回车发送联想补全内容，空格/Tab输入补齐）
 input.addEventListener('keydown', function(e){
+    if(e.isComposing) return;
+    // 空格：直接补全灰色提示内容（电脑端Tab同样效果，兼容旧版安卓键盘键名）
+    if(e.key === ' ' || e.key === 'Tab' || e.key === 'Spacebar' || e.keyCode === 32){
+        if(completeHint()){
+            e.preventDefault();
+        }
+        return;
+    }
     if(e.key === 'Enter'){
-        const cmd = input.value;
-        print(`> ${cmd}`);
+        let cmd = input.value;
+        // 主界面/指令界面：正在输入未完成部分时，回车发送联想补全后的内容
+        if(state === 'menu' && !f_state.active){
+            const pred = computePrediction(cmd);
+            if(pred.kind === 'complete' && !/\s$/.test(cmd)){
+                cmd = cmd + pred.text;
+            }
+        }
+        print(`${userName}> ${cmd}`);
         handleInput(cmd);
         input.value = "";
+        lastValue = "";
+        updateSuggestion();
     }
 });
 
+// 实时刷新输入提示与预测层；手机端虚拟键盘空格只触发input事件时，同样执行空格补全
+input.addEventListener('input', function(){
+    const v = input.value;
+    if(v.length > lastValue.length){
+        const added = v.slice(lastValue.length);
+        // 新输入为空白字符（手机虚拟键盘空格）：按空格补全逻辑处理
+        if(/^\s+$/.test(added) && lastValue.length > 0){
+            input.value = lastValue;
+            if(!completeHint()){
+                // 无灰色提示可补全：保留用户输入的尾随空格（不误报、不影响执行）
+                input.value = lastValue + added;
+                lastValue = input.value;
+            }
+        }
+    }
+    lastValue = input.value;
+    updateSuggestion();
+});
+
 // 页面加载初始化
-showMainMenu();
+(function initLoad(){
+    try{
+        const savedPhys = localStorage.getItem("phys");
+        const savedName = localStorage.getItem("userName");
+        if(savedPhys){
+            phys = JSON.parse(savedPhys);
+        }
+        if(savedName){
+            setPromptText(savedName);
+        }
+    }catch(ex){}
+    showMainMenu();
+    updateSuggestion();
+})();
 </script>
+</body>
+</html>
