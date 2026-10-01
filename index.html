@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>璀璨16.2基岩版珍珠炮计算器</title>
+<title>璀璨17基岩版珍珠炮计算器</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
@@ -34,7 +34,7 @@ body {
     color: #fff;
     flex-shrink: 0;
 }
-/* 璀璨16.2：输入提示与预测——输入栏提示层容器 */
+/* 璀璨17：输入提示与预测——输入栏提示层容器 */
 #input-wrap {
     flex: 1;
     position: relative;
@@ -96,7 +96,7 @@ body {
 </div>
 <input type="file" id="file-input" accept=".json">
 <script>
-// 璀璨16.2 基岩版珍珠炮计算器
+// 璀璨17 基岩版珍珠炮计算器
 // 物理常量（原始默认值）
 const DEFAULT_PHYS = {
     G: 0.025,
@@ -131,7 +131,7 @@ const input = document.getElementById('cmd-input');
 const fileInput = document.getElementById('file-input');
 const promptSpan = document.getElementById('prompt');
 
-// ========== 璀璨16.2 输入提示与预测 ==========
+// ========== 璀璨17 输入提示与预测 ==========
 const suggestionEl = document.getElementById('suggestion');
 
 // 联想指令池（从语法角度构建，不新增/删改任何已知命令）
@@ -230,7 +230,7 @@ function computePrediction(raw){
     return {kind:'invalid'};
 }
 
-// 更新输入栏灰色提示层
+//输入栏灰色提示层
 function updateSuggestion(){
     const val = input.value;
     if(val.length > 0){
@@ -937,9 +937,9 @@ function showMainMenu() {
     step = 0;
     f_state.active = false;
     print("");
-    print("=".repeat(55));
-    print("璀璨16.2珍珠计算器");
-    print("=".repeat(55));
+    print("=".repeat(25));
+    print("璀璨17基岩版珍珠计算器");
+    print("=".repeat(25));
     print(`配置文件读取状态：${configFileName}`);
     print("  A=已知落点反推TNT数量");
     print("  B=给定TNT算落点");
@@ -954,7 +954,7 @@ function showMainMenu() {
 }
 
 function showHelp() {
-    print("============================欢迎使用璀璨16.2基岩版珍珠计算器 以下为使用教程============================");
+    print("============================欢迎使用璀璨17基岩版珍珠计算器 以下为使用教程============================");
     print(" 1 //若您输入A 您还需要输入您的珍珠初始坐标与您的目的地坐标（TNT高度已自动设为珍珠眼部高度，纯平射），然后按下回车，此后，璀璨系统会自动预测您的珍珠路径并自动计算最优的R/L阵列的TNT组合");
     print(" 2 //若您输入B 您还需要输入您的珍珠初始坐标、打角方向与目标落地Y高度（TNT高度已自动设为珍珠眼部高度，纯平射），然后按下回车，此后，璀璨系统会自动预测您的珍珠路径并自动计算该组合下的目的地坐标");
     print(" 3 //若您输入C 这和程序A相同，但您还需要输入您的火控架构集合（若您不输入直接回车，则为空集），TNT高度同样自动设为珍珠眼部高度，此时璀璨系统会省略计算过程（空集时不省略）并在输出结果时表示成适合您配置ROM的形式");
