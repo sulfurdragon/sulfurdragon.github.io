@@ -5,99 +5,333 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>璀璨17基岩版珍珠炮计算器</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body {
-    background: #000;
-    color: #fff;
-    font-family: Consolas, "Courier New", monospace;
-    font-size: clamp(13px, 2.8vw, 15px);
-    line-height: 1.5;
-    height: 100vh;
-    height: 100dvh;
-    overflow: hidden;
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{
+    background:#121212;
+    color:#eee;
+    font-family:Consolas,"Courier New",monospace;
+    padding:12px;
+    min-height:100vh;
 }
-#terminal {
-    height: calc(100vh - clamp(30px, 7vw, 36px));
-    height: calc(100dvh - clamp(30px, 7vw, 36px));
-    overflow-y: auto;
-    padding: 10px 15px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+.container{
+    max-width:960px;
+    margin:0 auto;
 }
-#input-line {
-    height: clamp(30px, 7vw, 36px);
-    display: flex;
-    border-top: 1px solid #333;
+h1{
+    text-align:center;
+    color:#73d0ff;
+    margin-bottom:16px;
+    font-size:clamp(18px,4vw,24px);
 }
-#prompt {
-    padding: 5px 10px;
-    color: #fff;
-    flex-shrink: 0;
+.panel{
+    background:#1e1e1e;
+    border:1px solid #3a3a3a;
+    border-radius:8px;
+    padding:14px;
+    margin-bottom:14px;
 }
-/* 璀璨17：输入提示与预测——输入栏提示层容器 */
-#input-wrap {
-    flex: 1;
-    position: relative;
-    min-width: 0;
+.panel h2{
+    color:#73d0ff;
+    font-size:16px;
+    margin-bottom:10px;
 }
-/* 灰色半透明提示层（占位提示 + 联想补全） */
-#suggestion {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 5px 10px;
-    font-family: inherit;
-    font-size: inherit;
-    line-height: inherit;
-    white-space: pre;
-    overflow: hidden;
-    pointer-events: none;
-    user-select: none;
+.mode-bar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:10px;
 }
-#suggestion .typed {
-    color: #fff;
+button{
+    background:#2b4866;
+    color:#fff;
+    border:none;
+    padding:7px 11px;
+    border-radius:5px;
+    cursor:pointer;
+    font-family:inherit;
+    font-size:13px;
 }
-#suggestion .pred {
-    color: rgba(255, 255, 255, 0.38);
+button:hover{background:#3b648c;}
+button.secondary{background:#444;}
+button.secondary:hover{background:#555;}
+button.danger{background:#662c2c;}
+button.danger:hover{background:#883838;}
+.form-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+    margin:7px 0;
 }
-#cmd-input {
-    position: relative;
-    width: 100%;
-    background: transparent;
-    color: transparent;
-    caret-color: #fff;
-    border: none;
-    outline: none;
-    font-family: inherit;
-    font-size: inherit;
-    padding: 5px 10px;
-    -webkit-appearance: none;
-    appearance: none;
+.form-row label{
+    width:110px;
+    flex-shrink:0;
+    font-size:13px;
 }
-#terminal::-webkit-scrollbar { width: 8px; }
-#terminal::-webkit-scrollbar-track { background: #000; }
-#terminal::-webkit-scrollbar-thumb { background: #333; }
-/* 隐藏原生文件input */
-#file-input {
-    display:none;
+.form-row input,.form-row select,textarea{
+    flex:1;
+    min-width:120px;
+    background:#111;
+    color:#fff;
+    border:1px solid #444;
+    padding:6px 8px;
+    border-radius:4px;
+    font-family:inherit;
+    font-size:13px;
 }
+textarea{resize:vertical;min-height:120px;}
+.result-card{
+    background:#14202b;
+    border:1px solid #2b4866;
+    border-radius:6px;
+    padding:12px;
+    white-space:pre-wrap;
+    color:#cde8ff;
+    font-size:12.5px;
+}
+small{color:#aaa;font-size:11px;}
+.hidden{display:none !important;}
+.two-col{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+}
+@media(max-width:640px){
+    .two-col{grid-template-columns:1fr;}
+}
+.info-text{color:#bbbbbb;margin:6px 0;font-size:12px;}
 </style>
 </head>
 <body>
-<div id="terminal"></div>
-<div id="input-line">
-    <span id="prompt">user></span>
-    <div id="input-wrap">
-        <div id="suggestion"></div>
-        <input type="text" id="cmd-input" autofocus autocomplete="off">
+<div class="container">
+    <h1>璀璨17基岩版珍珠炮计算器</h1>
+    <!-- 模式选择 -->
+    <div class="panel">
+        <h2>计算模式选择</h2>
+        <div class="mode-bar">
+            <button onclick="switchMode('A')">A 落点反推TNT</button>
+            <button onclick="switchMode('B')">B TNT正向算落点</button>
+            <button onclick="switchMode('C')">C 自定义火控架构</button>
+            <button onclick="switchMode('F')">F 指定配置+轨迹查询</button>
+            <button onclick="switchMode('G')">G 拦截求解</button>
+            <button onclick="openPhysicsPanel()">物理参数</button>
+            <button onclick="openHelpPanel()">使用帮助</button>
+            <button class="danger" onclick="guiResetAll()">全部重置</button>
+        </div>
+        <div class="info-text">当前模式：<span id="currentModeText">未选择</span>｜配置状态：<span id="guiConfigStatus">无</span></div>
+    </div>
+    <div class="two-col">
+        <!-- 输入表单区 -->
+        <div>
+            <!-- A模式 -->
+            <div id="panelA" class="panel hidden">
+                <h2>A模式：已知落点反推TNT</h2>
+                <div class="form-row">
+                    <label>珍珠X</label><input id="a_pe_x" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>珍珠Y</label><input id="a_pe_y" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>珍珠Z</label><input id="a_pe_z" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>目标X</label><input id="a_t_x" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>目标Y</label><input id="a_t_y" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>目标Z</label><input id="a_t_z" type="number" step="any">
+                </div>
+                <div class="mode-bar"><button onclick="runModeA()">开始计算A</button></div>
+            </div>
+            <!-- B模式 -->
+            <div id="panelB" class="panel hidden">
+                <h2>B模式：给定TNT算落点</h2>
+                <div class="form-row">
+                    <label>珍珠X</label><input id="b_pe_x" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>珍珠Y</label><input id="b_pe_y" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>珍珠Z</label><input id="b_pe_z" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>左阵列TNT(nL)</label><input id="b_nl" type="number">
+                </div>
+                <div class="form-row">
+                    <label>右阵列TNT(nR)</label><input id="b_nr" type="number">
+                </div>
+                <div class="form-row">
+                    <label>打角方向</label>
+                    <select id="b_dir">
+                        <option value="x+">x+</option>
+                        <option value="x-">x-</option>
+                        <option value="z+">z+</option>
+                        <option value="z-">z-</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>落地Y高度</label><input id="b_y_land" type="number" step="any">
+                </div>
+                <div class="mode-bar"><button onclick="runModeB()">开始计算B</button></div>
+            </div>
+            <!-- C模式 -->
+            <div id="panelC" class="panel hidden">
+                <h2>C模式：自定义火控架构</h2>
+                <div class="form-row">
+                    <label>珍珠X</label><input id="c_pe_x" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>珍珠Y</label><input id="c_pe_y" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>珍珠Z</label><input id="c_pe_z" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>目标X</label><input id="c_t_x" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>目标Y</label><input id="c_t_y" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>目标Z</label><input id="c_t_z" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>火控架构数组</label><input id="c_arch" placeholder="空格分隔，例 2 4 8">
+                </div>
+                <div class="mode-bar"><button onclick="runModeC()">开始计算C</button></div>
+            </div>
+            <!-- F模式 -->
+            <div id="panelF" class="panel hidden">
+                <h2>F模式：指定配置+轨迹查询</h2>
+                <div class="form-row">
+                    <label>珍珠X</label><input id="f_pe_x" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>珍珠Y</label><input id="f_pe_y" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>珍珠Z</label><input id="f_pe_z" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>左阵列TNT(nL)</label><input id="f_nl" type="number">
+                </div>
+                <div class="form-row">
+                    <label>右阵列TNT(nR)</label><input id="f_nr" type="number">
+                </div>
+                <div class="form-row">
+                    <label>打角方向</label>
+                    <select id="f_dir">
+                        <option value="x+">x+</option>
+                        <option value="x-">x-</option>
+                        <option value="z+">z+</option>
+                        <option value="z-">z-</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>落地Y高度</label><input id="f_y_land" type="number" step="any">
+                </div>
+                <div class="info-text">先计算弹道，之后可查询tick坐标</div>
+                <div class="mode-bar">
+                    <button onclick="runModeF_calc()">1.计算弹道</button>
+                </div>
+                <hr style="margin:10px 0;border-color:#333">
+                <div class="form-row">
+                    <label>游戏刻查询</label><input id="f_tick_query" placeholder="单个tick或 10_50">
+                </div>
+                <div class="mode-bar">
+                    <button onclick="runModeF_query()">2.查询坐标</button>
+                </div>
+            </div>
+            <!-- G模式 -->
+            <div id="panelG" class="panel hidden">
+                <h2>G模式：拦截求解</h2>
+                <div class="info-text">珍珠Y使用物理参数【珍珠默认Y坐标】</div>
+                <div class="form-row">
+                    <label>珍珠X</label><input id="g_pe_x" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>珍珠Z</label><input id="g_pe_z" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>拦截目标X</label><input id="g_ix" type="number" step="any">
+                </div>
+                <div class="form-row">
+                    <label>拦截目标Z</label><input id="g_iz" type="number" step="any">
+                </div>
+                <div class="mode-bar"><button onclick="runModeG()">开始计算G拦截</button></div>
+            </div>
+            <!-- 物理参数弹窗面板【全部改为中文标签】 -->
+            <div id="panelPhys" class="panel hidden">
+                <h2>物理参数设置</h2>
+                <small>修改会保存到浏览器本地存储</small>
+                <div class="form-row"><label>重力加速度(G)</label><input id="p_G" type="number" step="any"></div>
+                <div class="form-row"><label>眼部高度偏移(EYE)</label><input id="p_EYE" type="number" step="any"></div>
+                <div class="form-row"><label>单颗TNT最大推力(SINGLE_MAX)</label><input id="p_SINGLE_MAX" type="number" step="any"></div>
+                <div class="form-row"><label>TNT搜索余量(SEARCH_RANGE)</label><input id="p_SEARCH_RANGE" type="number"></div>
+                <div class="form-row"><label>最大仿真游戏刻(MAX_TICK)</label><input id="p_MAX_TICK" type="number"></div>
+                <div class="form-row"><label>阵列单路TNT上限(MAX_SINGLE_ARRAY)</label><input id="p_MAX_SINGLE_ARRAY" type="number"></div>
+                <div class="form-row"><label>坐标轴判定精度(AXIS_EPS)</label><input id="p_AXIS_EPS" type="number" step="any"></div>
+                <div class="form-row"><label>位置误差阈值(ERR_POS_EPS)</label><input id="p_ERR_POS_EPS" type="number" step="any"></div>
+                <div class="form-row"><label>珍珠默认Y坐标(FIX_PEARL_Y)</label><input id="p_FIX_PEARL_Y" type="number" step="any"></div>
+                <div class="form-row"><label>拦截允许最大下落格数(MAX_DROP)</label><input id="p_MAX_DROP" type="number" step="any"></div>
+                <div class="mode-bar">
+                    <button onclick="readPhysToGui()">读取当前参数</button>
+                    <button onclick="savePhysFromGui()">保存参数</button>
+                    <button class="secondary" onclick="resetPhysDefault()">恢复默认物理</button>
+                    <button class="secondary" onclick="closePhysicsPanel()">关闭</button>
+                </div>
+            </div>
+            <!-- 帮助面板 -->
+            <div id="panelHelp" class="panel hidden">
+                <h2>使用帮助</h2>
+                <div class="result-card" style="max-height:340px;overflow-y:auto;">
+A模式｜已知落点坐标，反推左右阵列TNT颗数，自动判定发射方向。
+B模式｜输入珍珠坐标+左右TNT数量+方向，正向算出珍珠落点。
+C模式｜自定义火控架构集合，输出ROM可直接使用的TNT表达式。
+F模式｜给定全套配置，计算飞行弹道；支持查询任意tick时刻珍珠空间坐标。
+G模式｜拦截求解，珍珠Y使用物理参数【珍珠默认Y坐标】；约束下落≤拦截允许最大下落格数。
+【JSON配置文件】
+格式示例：
+{
+  "pearlX":100,
+  "pearlY":64,
+  "pearlZ":200,
+  "arch":[2,4,8,16]
+}
+适用：基岩版1.16.210+，鎏龍霄飓原版开源。
+联系作者 beisong2025@outlook.com 官方QQ群1104379318
+                </div>
+                <div class="mode-bar"><button class="secondary" onclick="closeHelpPanel()">关闭帮助</button></div>
+            </div>
+            <!-- H模式 文件上传 -->
+            <div class="panel">
+                <h2>H模式｜加载JSON配置文件</h2>
+                <input type="file" id="guiFileInput" accept=".json">
+                <div class="mode-bar" style="margin-top:8px;">
+                    <button onclick="document.getElementById('guiFileInput').click()">选择JSON文件</button>
+                    <button class="secondary" onclick="fillFormFromConfig()">把配置填入表单</button>
+                </div>
+                <div class="info-text" id="fileLoadHint">未加载文件</div>
+            </div>
+        </div>
+        <!-- 结果输出区 -->
+        <div>
+            <div class="panel" style="min-height:320px;">
+                <h2>计算输出结果</h2>
+                <div id="outBox" class="result-card">等待执行计算...</div>
+                <div class="mode-bar" style="margin-top:10px;">
+                    <button class="secondary" onclick="clearOutput()">清空输出</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-<input type="file" id="file-input" accept=".json">
 <script>
-// 璀璨17 基岩版珍珠炮计算器
-// 物理常量（原始默认值）
+// ============【璀璨17原版完整核心计算库，完全原样复制，无任何修改】============
 const DEFAULT_PHYS = {
     G: 0.025,
     R: 8.0,
@@ -112,7 +346,6 @@ const DEFAULT_PHYS = {
     MAX_DROP: 1.0
 };
 let phys = JSON.parse(JSON.stringify(DEFAULT_PHYS));
-
 const ERR_MSG = {
     tnt_negative: "TNT数量不能为负数",
     tnt_out_of_range: "TNT距离珍珠超过8格无推力",
@@ -126,209 +359,6 @@ const ERR_MSG = {
     json_parse_err: "JSON解析失败，请检查配置文件格式",
     json_missing: "配置文件缺少珍珠坐标或火控架构字段",
 };
-const terminal = document.getElementById('terminal');
-const input = document.getElementById('cmd-input');
-const fileInput = document.getElementById('file-input');
-const promptSpan = document.getElementById('prompt');
-
-// ========== 璀璨17 输入提示与预测 ==========
-const suggestionEl = document.getElementById('suggestion');
-
-// 联想指令池（从语法角度构建，不新增/删改任何已知命令）
-const QUICK_MODES = ["A","B","C","D","E","F","G","H"];
-const CMD_POOL = ["help","save","name","json","physics","reset"];
-const JSON_SUB_POOL = ["help"];
-const PHYS_PARAM_POOL = ["G","EYE","SINGLE_MAX","SEARCH_RANGE","MAX_TICK","MAX_SINGLE_ARRAY","AXIS_EPS","ERR_POS_EPS","MAX_DROP"];
-
-let currentHint = "";
-let lastValue = "";  // 输入框上一次的值（用于手机端空格补全检测）
-
-function escapeHtml(s){
-    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-}
-
-// 计算联想提示（仅主界面/指令界面启用）
-// kind: none=无提示  complete=补全当前词  sub=下一级子内容  enter=完整无子集提示回车发送  invalid=不在可用范围
-function computePrediction(raw){
-    if(state !== 'menu' || f_state.active) return {kind:'none'};
-    const anal = raw.trimStart();
-    if(anal.length === 0) return {kind:'none'};
-    const hasTrailingSpace = /\s$/.test(anal);
-    const tokens = anal.split(/\s+/);
-    const prefix = hasTrailingSpace ? "" : tokens[tokens.length-1];
-    const lowerPrefix = prefix.toLowerCase();
-    const done = hasTrailingSpace ? tokens.filter(t=>t!=="") : tokens.slice(0, tokens.length-1);
-    const f0 = (done[0]||"").toLowerCase();
-
-    // 尾随空格：只按已输完的token判断，尾随空格不影响执行
-    if(hasTrailingSpace){
-        if(done.length === 1){
-            if(QUICK_MODES.map(m=>m.toLowerCase()).includes(f0)) return {kind:'enter', text:'＜回车发送＞'};
-            if(f0 === 'json') return {kind:'sub', text:'help'};
-            if(f0 === 'physics') return {kind:'sub', text:'set'};
-            if(CMD_POOL.includes(f0)) return {kind:'enter', text:'＜回车发送＞'};
-            return {kind:'invalid'};
-        }
-        if(done.length === 2){
-            if(f0 === 'json' && done[1].toLowerCase() === 'help') return {kind:'enter', text:'＜回车发送＞'};
-            if(f0 === 'physics' && done[1].toLowerCase() === 'set') return {kind:'sub', text: PHYS_PARAM_POOL[0]};
-            return {kind:'invalid'};
-        }
-        if(done.length >= 3){
-            if(f0 === 'json' && done[1].toLowerCase() === 'help') return {kind:'enter', text:'＜回车发送＞'};
-            if(f0 === 'physics' && done[1].toLowerCase() === 'set' && PHYS_PARAM_POOL.some(p=>p===done[2])) return {kind:'enter', text:'＜回车发送＞'};
-            if(f0 === 'physics' && done[1].toLowerCase() === 'set' && PHYS_PARAM_POOL.some(p=>p.toLowerCase()===done[2].toLowerCase())) return {kind:'enter', text:'＜回车发送＞'};
-            return {kind:'invalid'};
-        }
-        return {kind:'none'};
-    }
-
-    // 正在输入最后一个token
-    if(done.length === 0){
-        if(QUICK_MODES.map(m=>m.toLowerCase()).includes(lowerPrefix)) return {kind:'enter', text:'＜回车发送＞'};
-        const cand = CMD_POOL.find(c => c.toLowerCase().startsWith(lowerPrefix) && c.length > prefix.length);
-        if(cand) return {kind:'complete', text: cand.slice(prefix.length)};
-        if(CMD_POOL.includes(lowerPrefix)){
-            if(lowerPrefix === 'json') return {kind:'sub', text:'help'};
-            if(lowerPrefix === 'physics') return {kind:'sub', text:'set'};
-            return {kind:'enter', text:'＜回车发送＞'};
-        }
-        return {kind:'invalid'};
-    }
-
-    if(f0 === 'json'){
-        if(done.length === 1){
-            const cand = JSON_SUB_POOL.find(c => c.toLowerCase().startsWith(lowerPrefix) && c.length > prefix.length);
-            if(cand) return {kind:'complete', text: cand.slice(prefix.length)};
-            if(lowerPrefix === 'help') return {kind:'enter', text:'＜回车发送＞'};
-            return {kind:'invalid'};
-        }
-        if(done[1].toLowerCase() === 'help') return {kind:'enter', text:'＜回车发送＞'};
-        return {kind:'invalid'};
-    }
-    if(f0 === 'physics'){
-        if(done.length === 1){
-            if(lowerPrefix === 'set') return {kind:'sub', text: PHYS_PARAM_POOL[0]};
-            const cand = ['set'].find(c => c.toLowerCase().startsWith(lowerPrefix) && c.length > prefix.length);
-            if(cand) return {kind:'complete', text: cand.slice(prefix.length)};
-            return {kind:'invalid'};
-        }
-        if(done[1].toLowerCase() === 'set'){
-            if(done.length === 2){
-                const cand = PHYS_PARAM_POOL.find(c => c.startsWith(prefix) && c.length > prefix.length);
-                if(cand) return {kind:'complete', text: cand.slice(prefix.length)};
-                if(PHYS_PARAM_POOL.some(p => p === prefix)) return {kind:'enter', text:'＜回车发送＞'};
-                if(PHYS_PARAM_POOL.some(p => p.toLowerCase() === prefix.toLowerCase())) return {kind:'enter', text:'＜回车发送＞'};
-                return {kind:'invalid'};
-            }
-            if(PHYS_PARAM_POOL.some(p => p === done[2])) return {kind:'enter', text:'＜回车发送＞'};
-            if(PHYS_PARAM_POOL.some(p => p.toLowerCase() === done[2].toLowerCase())) return {kind:'enter', text:'＜回车发送＞'};
-            return {kind:'invalid'};
-        }
-        return {kind:'invalid'};
-    }
-    return {kind:'invalid'};
-}
-
-// 更新输入栏灰色提示层
-function updateSuggestion(){
-    const val = input.value;
-    if(val.length > 0){
-        const pred = computePrediction(val);
-        let html = `<span class="typed">${escapeHtml(val)}</span>`;
-        if(pred.kind === 'complete'){
-            html += `<span class="pred">${escapeHtml(pred.text)}</span>`;
-        }else if(pred.kind === 'sub' || pred.kind === 'enter'){
-            const sep = /\s$/.test(val) ? "" : " ";
-            html += `<span class="pred">${sep}${escapeHtml(pred.text)}</span>`;
-        }else if(pred.kind === 'invalid'){
-            const sep = /\s$/.test(val) ? "" : " ";
-            html += `<span class="pred">${sep}该指令未在可用指令范围内</span>`;
-        }
-        suggestionEl.innerHTML = html;
-    }else{
-        if(currentHint){
-            suggestionEl.innerHTML = `<span class="pred">${escapeHtml(currentHint)}</span>`;
-        }else{
-            suggestionEl.innerHTML = "";
-        }
-    }
-}
-
-// 空格/Tab 输入补齐：直接补全灰色提示内容
-function completeHint(){
-    const val = input.value;
-    if(val.length === 0) return false;
-    const pred = computePrediction(val);
-    if(pred.kind === 'complete'){
-        input.value = val + pred.text;
-        lastValue = input.value;
-        updateSuggestion();
-        return true;
-    }
-    if(pred.kind === 'sub'){
-        const sep = /\s$/.test(val) ? "" : " ";
-        input.value = val + sep + pred.text;
-        lastValue = input.value;
-        updateSuggestion();
-        return true;
-    }
-    return false;
-}
-
-// 设置占位提示（灰色半透明，与计算器打印的提示同步）
-function setInputHint(txt){
-    currentHint = txt;
-    updateSuggestion();
-}
-
-// 根据打印内容同步输入栏占位提示（提示以程序提示内容为准）
-function updateHintFromPrint(text){
-    const t = text.trim();
-    if(t === "") return;
-    if(t === "请输入（A/B/C/D/E/F/G/H）或命令 输入help查看支持的命令"){
-        setInputHint("请输入模式或指令");
-        return;
-    }
-    // 以“：”结尾的是输入提示，优先采用，与程序提示保持一致
-    if(t.endsWith("：")){
-        if(t === "请输入查询tick（整数），或'开始_结束'格式范围，或'R'返回主菜单："){
-            setInputHint("请输入查询tick或tick范围");
-            return;
-        }
-        let hint = t.slice(0, -1).replace(/[＜＞]/g, "");
-        if(!/^请输入/.test(hint) && !/^输入/.test(hint)){
-            hint = "请输入" + hint;
-        }
-        setInputHint(hint);
-        return;
-    }
-    if(t.includes("输入save返回主界面")){
-        setInputHint("输入save保存并回到主界面");
-        return;
-    }
-    if(/回车/.test(t)){
-        setInputHint("回车返回主界面");
-        return;
-    }
-}
-
-// ========== 新增全局配置存储 ==========
-let configData = null;
-let configFileName = "无";
-let userName = "user";
-
-function setPromptText(txt){
-    userName = txt;
-    promptSpan.textContent = userName+">";
-}
-
-function print(text = "") {
-    terminal.textContent += text + "\n";
-    terminal.scrollTop = terminal.scrollHeight;
-    updateHintFromPrint(text);
-}
-
 function auto_tnt_y(pe_y) {
     return pe_y + phys.EYE;
 }
@@ -656,7 +686,6 @@ function solve_C_fast(target, pearl, tntL, tntR, arch) {
     best_data.error = best_err;
     return [best_data, null];
 }
-
 function get_drop_height(t) {
     return phys.G * T(t);
 }
@@ -799,750 +828,249 @@ function solve_intercept(px, pz, ix, iz) {
     if(found === null) return [null,"intercept_tick_too_large"];
     return [found, null];
 }
-let f_state = {
-    active: false,
-    step:0,
-    pearl:null,
-    v0:null,
-    t_land:0
-};
-function function_F_start(){
-    print("\n==== F模式：指定TNT配置与轨迹查询 ====");
-    f_state.active = true;
-    f_state.step =0;
-    if(configData){
-        f_state.pe_x = configData.pearlX;
-        f_state.pe_y = configData.pearlY;
-        f_state.pe_z = configData.pearlZ;
-        print(`已加载配置珍珠坐标：X=${f_state.pe_x}, Y=${f_state.pe_y}, Z=${f_state.pe_z}`);
-        f_state.step =3;
-        print("左阵列TNT数量：");
-    }else{
-        print("珍珠初始X：");
-    }
-}
-function function_F_input(val){
-    const step = f_state.step;
-    try{
-        if(step ===0){
-            f_state.pe_x = parseFloat(val);
-            f_state.step =1;
-            print("珍珠初始Y：");
-        }else if(step ===1){
-            f_state.pe_y = parseFloat(val);
-            f_state.step =2;
-            print("珍珠初始Z：");
-        }else if(step ===2){
-            f_state.pe_z = parseFloat(val);
-            f_state.step =3;
-            print("左阵列TNT数量：");
-        }else if(step ===3){
-            f_state.nL = parseInt(val);
-            f_state.step =4;
-            print("右阵列TNT数量：");
-        }else if(step ===4){
-            f_state.nR = parseInt(val);
-            f_state.step =5;
-            print("打角方向(x+/x-/z+/z-)：");
-        }else if(step ===5){
-            f_state.direct = val.trim().toLowerCase();
-            f_state.step =6;
-            print("目标落地Y高度：");
-        }else if(step ===6){
-            const y_land = parseFloat(val);
-            const pearl = [f_state.pe_x, f_state.pe_y, f_state.pe_z];
-            const tnt_y = auto_tnt_y(f_state.pe_y);
-            const [tntL, tntR] = get_tnt_pair(pearl, tnt_y, f_state.direct);
-            const [res, err] = solve_B(f_state.nL, f_state.nR, pearl, tntL, tntR, y_land);
-            if(res === null){
-                print(`计算失败：${ERR_MSG[err] || '未知错误'}`);
-                f_state.active = false;
-                showMainMenu();
-                return;
-            }
-            f_state.pearl = pearl;
-            f_state.v0 = res.v0;
-            f_state.t_land = res.t_land;
-            print(`\n【F模式：弹道计算完成】`);
-            print(`飞行时间：${res.t_land.toFixed(4)} tick`);
-            print(`落点坐标：X=${res.land_pos[0].toFixed(4)}, Y=${res.land_pos[1].toFixed(4)}, Z=${res.land_pos[2].toFixed(4)}`);
-            f_state.step =7;
-            print("\n请输入查询tick（整数），或'开始_结束'格式范围，或'R'返回主菜单：");
-        }else if(step ===7){
-            if(val.trim().toUpperCase() === 'R'){
-                f_state.active = false;
-                showMainMenu();
-                return;
-            }
-            if(val.includes('_')){
-                const parts = val.split('_');
-                if(parts.length!==2){
-                    print("无效格式：请使用 '开始_结束' 格式");
-                    return;
-                }
-                const start_tick = parseInt(parts[0]);
-                const end_tick = parseInt(parts[1]);
-                if(isNaN(start_tick)||isNaN(end_tick)){
-                    print("输入无效，请输入有效的数字");
-                    return;
-                }
-                if(start_tick <=0 || end_tick <=0){
-                    print("无效数值：tick必须大于0");
-                    return;
-                }
-                if(start_tick > f_state.t_land || end_tick > f_state.t_land){
-                    print("数值大于可计算的范围");
-                    return;
-                }
-                if(start_tick > end_tick){
-                    print("起始tick不能大于结束tick");
-                    return;
-                }
-                print(`\n=== Tick ${start_tick} 到 ${end_tick} 坐标 ===`);
-                for(let tick=start_tick;tick<=end_tick;tick++){
-                    const pos = get_pos(f_state.pearl, f_state.v0, tick);
-                    print(`tick ${tick}: X=${pos[0].toFixed(6)}, Y=${pos[1].toFixed(6)}, Z=${pos[2].toFixed(6)}`);
-                }
-            }else{
-                const tick_val = parseInt(val);
-                if(isNaN(tick_val)){
-                    print("输入无效，请输入有效的数字");
-                    return;
-                }
-                if(tick_val <=0){
-                    print("无效数值：tick必须大于0");
-                    return;
-                }
-                if(tick_val > f_state.t_land){
-                    print("数值大于可计算的范围");
-                    return;
-                }
-                const pos = get_pos(f_state.pearl, f_state.v0, tick_val);
-                print(`tick ${tick_val} 坐标：X=${pos[0].toFixed(6)}, Y=${pos[1].toFixed(6)}, Z=${pos[2].toFixed(6)}`);
-            }
-            print("\n请输入查询tick（整数），或'开始_结束'格式范围，或'R'返回主菜单：");
-        }
-    }catch(e){
-        print(`\n输入错误：${ERR_MSG.input_invalid}`);
-        f_state.active = false;
-        showMainMenu();
-    }
-}
-let state = 'menu';
-let inputBuffer = {};
-let step = 0;
 
-function showMainMenu() {
-    state = 'menu';
-    step = 0;
-    f_state.active = false;
-    print("");
-    print("=".repeat(25));
-    print("璀璨17基岩版珍珠计算器");
-    print("=".repeat(25));
-    print(`配置文件读取状态：${configFileName}`);
-    print("  A=已知落点反推TNT数量");
-    print("  B=给定TNT算落点");
-    print("  C=自定义火控架构求解");
-    print("  D=退出程序");
-    print("  E=帮助说明");
-    print("  F=指定配置与轨迹查询");
-    print("  G=拦截求解模式");
-    print("  H=读取配置文件");
-    print("");
-    print("请输入（A/B/C/D/E/F/G/H）或命令 输入help查看支持的命令");
-}
+// F模式全局缓存
+let fCalcCache = null;
+// 配置文件全局
+let configData = null;
+let configFileName = "无";
 
-function showHelp() {
-    print("============================欢迎使用璀璨16.2基岩版珍珠计算器 以下为使用教程============================");
-    print(" 1 //若您输入A 您还需要输入您的珍珠初始坐标与您的目的地坐标（TNT高度已自动设为珍珠眼部高度，纯平射），然后按下回车，此后，璀璨系统会自动预测您的珍珠路径并自动计算最优的R/L阵列的TNT组合");
-    print(" 2 //若您输入B 您还需要输入您的珍珠初始坐标、打角方向与目标落地Y高度（TNT高度已自动设为珍珠眼部高度，纯平射），然后按下回车，此后，璀璨系统会自动预测您的珍珠路径并自动计算该组合下的目的地坐标");
-    print(" 3 //若您输入C 这和程序A相同，但您还需要输入您的火控架构集合（若您不输入直接回车，则为空集），TNT高度同样自动设为珍珠眼部高度，此时璀璨系统会省略计算过程（空集时不省略）并在输出结果时表示成适合您配置ROM的形式");
-    print(" 4 //若您输入D 软件会关闭在windows上的窗口并停止运行");
-    print(" 5 //若您输入E将会弹出这些文字给予恁说明，并返回交互界面");
-    print(" 6 //若您输入F 您需要输入珍珠初始坐标、两阵列TNT数量、打角方向和目标落地Y坐标（TNT高度自动=珍珠眼部高度），程序将计算弹道、落点和飞行时间，之后您可以查询任意tick或tick范围内的珍珠坐标");
-    print(" 7 //若您输入G 拦截求解模式，输入珍珠初始XZ、拦截目标XZ；约束：抵达拦截点下落不超过1格，输出最小总TNT配置");
-    print(" 8 //若您输入H 读取JSON配置文件，自动填入珍珠XYZ坐标与火控架构，支持中文文件名");
-    print(" 9 //作者邮箱beisong2025@outlook.com 官方QQ群1104379318");
-    print("=============本计算器适用基岩版1.16.210及以上版本，由鎏龍霄飓开发，面向全体玩家开源=============");
-    print("");
-    showMainMenu();
+// ===================== GUI桥接层 =====================
+const outBox = document.getElementById("outBox");
+function guiPrint(s){ outBox.textContent += s+"\n"; }
+function clearOutput(){ outBox.textContent = "等待执行计算..."; }
+function switchMode(mode){
+    ["panelA","panelB","panelC","panelF","panelG"].forEach(id=>document.getElementById(id).classList.add("hidden"));
+    document.getElementById("panel"+mode).classList.remove("hidden");
+    document.getElementById("currentModeText").innerText = mode+"模式";
 }
-
-// ========= 文件上传处理 修复Android打包相册问题、Windows文件选择后光标消失 =========
-fileInput.onchange = async function(e){
+function openPhysicsPanel(){ document.getElementById("panelPhys").classList.remove("hidden"); readPhysToGui(); }
+function closePhysicsPanel(){ document.getElementById("panelPhys").classList.add("hidden"); }
+function openHelpPanel(){ document.getElementById("panelHelp").classList.remove("hidden"); }
+function closeHelpPanel(){ document.getElementById("panelHelp").classList.add("hidden"); }
+function readPhysToGui(){
+    document.getElementById("p_G").value = phys.G;
+    document.getElementById("p_EYE").value = phys.EYE;
+    document.getElementById("p_SINGLE_MAX").value = phys.SINGLE_MAX;
+    document.getElementById("p_SEARCH_RANGE").value = phys.SEARCH_RANGE;
+    document.getElementById("p_MAX_TICK").value = phys.MAX_TICK;
+    document.getElementById("p_MAX_SINGLE_ARRAY").value = phys.MAX_SINGLE_ARRAY;
+    document.getElementById("p_AXIS_EPS").value = phys.AXIS_EPS;
+    document.getElementById("p_ERR_POS_EPS").value = phys.ERR_POS_EPS;
+    document.getElementById("p_FIX_PEARL_Y").value = phys.FIX_PEARL_Y;
+    document.getElementById("p_MAX_DROP").value = phys.MAX_DROP;
+}
+function savePhysFromGui(){
+    phys.G = parseFloat(document.getElementById("p_G").value);
+    phys.EYE = parseFloat(document.getElementById("p_EYE").value);
+    phys.SINGLE_MAX = parseFloat(document.getElementById("p_SINGLE_MAX").value);
+    phys.SEARCH_RANGE = Number(document.getElementById("p_SEARCH_RANGE").value);
+    phys.MAX_TICK = Number(document.getElementById("p_MAX_TICK").value);
+    phys.MAX_SINGLE_ARRAY = Number(document.getElementById("p_MAX_SINGLE_ARRAY").value);
+    phys.AXIS_EPS = parseFloat(document.getElementById("p_AXIS_EPS").value);
+    phys.ERR_POS_EPS = parseFloat(document.getElementById("p_ERR_POS_EPS").value);
+    phys.FIX_PEARL_Y = parseFloat(document.getElementById("p_FIX_PEARL_Y").value);
+    phys.MAX_DROP = parseFloat(document.getElementById("p_MAX_DROP").value);
+    localStorage.setItem("phys",JSON.stringify(phys));
+    guiPrint("物理参数已保存至本地存储");
+}
+function resetPhysDefault(){
+    phys = JSON.parse(JSON.stringify(DEFAULT_PHYS));
+    localStorage.setItem("phys",JSON.stringify(phys));
+    readPhysToGui();
+    guiPrint("已恢复全部物理参数为原版默认");
+}
+function guiResetAll(){
+    phys = JSON.parse(JSON.stringify(DEFAULT_PHYS));
+    configData = null; configFileName="无"; fCalcCache=null;
+    localStorage.removeItem("phys");
+    document.querySelectorAll("input[type=number],input:not([type=file]),select").forEach(el=>{el.value="";});
+    document.getElementById("guiConfigStatus").innerText="无";
+    document.getElementById("fileLoadHint").innerText="未加载文件";
+    clearOutput();
+    guiPrint("全部状态重置完成");
+}
+// H模式文件加载
+document.getElementById("guiFileInput").onchange = async function(e){
     const file = e.target.files[0];
-    if(!file){
-        setTimeout(()=>{input.focus();},100);
-        showMainMenu();
-        return;
-    }
+    if(!file) return;
     try{
         const txt = await file.text();
-        const jsonObj = JSON.parse(txt);
-        if(!("pearlX" in jsonObj) || !("pearlY" in jsonObj) || !("pearlZ" in jsonObj) || !("arch" in jsonObj)){
-            print(`\n${ERR_MSG.json_missing}`);
-            fileInput.value="";
-            setTimeout(()=>{input.focus();},100);
-            showMainMenu();
+        const jo = JSON.parse(txt);
+        if(!("pearlX" in jo)||!("pearlY" in jo)||!("pearlZ" in jo)||!("arch" in jo)){
+            guiPrint(""+ERR_MSG.json_missing);
+            document.getElementById("fileLoadHint").innerText="解析失败";
             return;
         }
-        configData = jsonObj;
-        configFileName = `已上传=${file.name}`;
-        print(`\n文件上传成功`);
+        configData = jo; configFileName = file.name;
+        document.getElementById("guiConfigStatus").innerText = configFileName;
+        document.getElementById("fileLoadHint").innerText = "已加载："+configFileName;
+        guiPrint("JSON配置加载成功："+configFileName);
     }catch(err){
-        print(`\n${ERR_MSG.json_parse_err}`);
-        configData=null;
-        configFileName="无";
+        guiPrint(""+ERR_MSG.json_parse_err);
+        document.getElementById("fileLoadHint").innerText="解析失败";
     }
-    fileInput.value="";
-    setTimeout(()=>{input.focus();},100);
-    showMainMenu();
+    this.value="";
 };
-
-function openFileChooser(){
-
-    fileInput.click();
+function fillFormFromConfig(){
+    if(!configData){ guiPrint("没有已加载的配置文件"); return; }
+    const px = configData.pearlX, py=configData.pearlY, pz=configData.pearlZ;
+    //A
+    document.getElementById("a_pe_x").value=px; document.getElementById("a_pe_y").value=py; document.getElementById("a_pe_z").value=pz;
+    //B
+    document.getElementById("b_pe_x").value=px; document.getElementById("b_pe_y").value=py; document.getElementById("b_pe_z").value=pz;
+    //C
+    document.getElementById("c_pe_x").value=px; document.getElementById("c_pe_y").value=py; document.getElementById("c_pe_z").value=pz;
+    document.getElementById("c_arch").value = (configData.arch||[]).join(" ");
+    //F
+    document.getElementById("f_pe_x").value=px; document.getElementById("f_pe_y").value=py; document.getElementById("f_pe_z").value=pz;
+    //G
+    document.getElementById("g_pe_x").value=px; document.getElementById("g_pe_z").value=pz;
+    guiPrint("已把JSON珍珠坐标填充到全部模式表单");
 }
-
-function showHelpCommand(){
-    print("=====可用指令表=====");
-    print("help=查看可用指令表");
-    print("save=保存设置并回到主界面");
-    print("name=修改用户名");
-    print("json=查看配置文件内容");
-    print("json help=获取配置文件事例文本");
-    print("physics=查看全部物理参数");
-    print("physics set 英文参数名 参数=修改指定物理参数");
-    print("reset=重置计算器全部参数");
-    print("＜输入save返回主界面＞");
+// ==========各模式运行入口==========
+function runModeA(){
+    clearOutput();
+    const px = parseFloat(document.getElementById("a_pe_x").value);
+    const py = parseFloat(document.getElementById("a_pe_y").value);
+    const pz = parseFloat(document.getElementById("a_pe_z").value);
+    const tx = parseFloat(document.getElementById("a_t_x").value);
+    const ty = parseFloat(document.getElementById("a_t_y").value);
+    const tz = parseFloat(document.getElementById("a_t_z").value);
+    if([px,py,pz,tx,ty,tz].some(isNaN)){ guiPrint(""+ERR_MSG.input_invalid); return; }
+    const pearl = [px,py,pz]; const target=[tx,ty,tz];
+    const direct = auto_dir(target, pearl); const tnt_y = auto_tnt_y(py);
+    const [tntL,tntR] = get_tnt_pair(pearl, tnt_y, direct);
+    guiPrint(`【A模式｜落点反推TNT】\n珍珠(${px.toFixed(2)},${py.toFixed(2)},${pz.toFixed(2)}) 目标(${tx.toFixed(2)},${ty.toFixed(2)},${tz.toFixed(2)})\n自动判定方向：${direct}｜TNT高度=${tnt_y.toFixed(3)}`);
+    const [res,err] = solve_A(target,pearl,tntL,tntR);
+    if(!res){ guiPrint("\n计算失败："+ERR_MSG[err]); return; }
+    guiPrint(`\n====前五候选组合（排名｜左｜右｜水平偏差）====`);
+    for(let i=0;i<res.top5.length;i++){
+        const [er, nl, nr] = res.top5[i];
+        guiPrint(` ${i+1}\t${nl}\t${nr}\t${er.toFixed(6)}`);
+    }
+    guiPrint(`\n====最优结果 ====`);
+    guiPrint(`打角状态：${res.angle}`);
+    guiPrint(`左阵列：${res.nL}颗  右阵列：${res.nR}颗  总TNT：${res.nL+res.nR}`);
+    guiPrint(`飞行tick：${res.t_land.toFixed(2)} (${(res.t_land/20).toFixed(2)}秒)`);
+    guiPrint(`落地 X=${res.land_pos[0].toFixed(4)}  Z=${res.land_pos[2].toFixed(4)}`);
+    guiPrint(`水平偏差：${res.error.toFixed(4)}格`);
 }
-
-function showPhysicsList(){
-    print("====全部物理常量====");
-    print(`G = ${phys.G}（基岩版末影珍珠重力加速度）`);
-    print(`EYE = ${phys.EYE}（珍珠眼部偏移高度，爆炸推力受力点偏移量）`);
-    print(`SINGLE_MAX = ${phys.SINGLE_MAX}（单颗TNT能够给到珍珠的极限速度增量）`);
-    print(`SEARCH_RANGE = ${phys.SEARCH_RANGE}（TNT数量搜索时的误差余量范围）`);
-    print(`MAX_TICK = ${phys.MAX_TICK}（珍珠弹道仿真最大允许游戏刻）`);
-    print(`MAX_SINGLE_ARRAY = ${phys.MAX_SINGLE_ARRAY}（拦截模式火控阵列单方向TNT最大上限颗数）`);
-    print(`AXIS_EPS = 1e-4（拦截模式坐标轴方向浮点数判定精度）`);
-    print(`ERR_POS_EPS = ${phys.ERR_POS_EPS}（拦截模式落点位置误差允许阈值）`);
-    print(`MAX_DROP = ${phys.MAX_DROP}（拦截模式珍珠发射时允许的最大初始下落偏移量）`);
-    print("＜输入physics set设置物理常量，输入save返回主界面＞");
+function runModeB(){
+    clearOutput();
+    const px = parseFloat(document.getElementById("b_pe_x").value);
+    const py = parseFloat(document.getElementById("b_pe_y").value);
+    const pz = parseFloat(document.getElementById("b_pe_z").value);
+    const nL = parseInt(document.getElementById("b_nl").value);
+    const nR = parseInt(document.getElementById("b_nr").value);
+    const dir = document.getElementById("b_dir").value;
+    const yLand = parseFloat(document.getElementById("b_y_land").value);
+    if([px,py,pz,nL,nR,yLand].some(isNaN)){ guiPrint(""+ERR_MSG.input_invalid); return; }
+    const pearl = [px,py,pz]; const tnt_y = auto_tnt_y(py);
+    const [tntL,tntR] = get_tnt_pair(pearl, tnt_y, dir);
+    guiPrint(`【B模式｜TNT正向算落点】\n珍珠(${px},${py},${pz})｜nL=${nL} nR=${nR}｜方向${dir}｜落地Y=${yLand}`);
+    const [res,err] = solve_B(nL,nR,pearl,tntL,tntR,yLand);
+    if(!res){ guiPrint("\n计算失败："+ERR_MSG[err]); return; }
+    guiPrint(`\n====计算结果====`);
+    guiPrint(`打角状态：${res.angle}`);
+    guiPrint(`飞行tick：${res.t_land.toFixed(2)} (${(res.t_land/20).toFixed(2)}秒)`);
+    guiPrint(`落点 X=${res.land_pos[0].toFixed(4)} Y=${res.land_pos[1].toFixed(4)} Z=${res.land_pos[2].toFixed(4)}`);
+    guiPrint(`竖直运动状态：${res.y_state}`);
 }
-
-function saveAllSettings(){
-    try{
-        localStorage.setItem("phys",JSON.stringify(phys));
-        localStorage.setItem("userName",userName);
-    }catch(e){}
-    showMainMenu();
+function runModeC(){
+    clearOutput();
+    const px = parseFloat(document.getElementById("c_pe_x").value);
+    const py = parseFloat(document.getElementById("c_pe_y").value);
+    const pz = parseFloat(document.getElementById("c_pe_z").value);
+    const tx = parseFloat(document.getElementById("c_t_x").value);
+    const ty = parseFloat(document.getElementById("c_t_y").value);
+    const tz = parseFloat(document.getElementById("c_t_z").value);
+    const archStr = document.getElementById("c_arch").value.trim();
+    const arch = archStr ? archStr.split(/\s+/).map(Number) : [];
+    if([px,py,pz,tx,ty,tz].some(isNaN)){ guiPrint(""+ERR_MSG.input_invalid); return; }
+    const pearl = [px,py,pz]; const target=[tx,ty,tz];
+    const direct = auto_dir(target, pearl); const tnt_y = auto_tnt_y(py);
+    const [tntL,tntR] = get_tnt_pair(pearl, tnt_y, direct);
+    guiPrint(`【C模式｜自定义火控架构】\n珍珠(${px},${py},${pz})｜目标(${tx},${ty},${tz})\n架构:[${arch.join(",")}]｜自动方向${direct} TNT高度=${tnt_y.toFixed(3)}`);
+    const [res,err] = solve_C_fast(target,pearl,tntL,tntR,arch);
+    if(!res){ guiPrint("\n计算失败："+ERR_MSG[err]); return; }
+    guiPrint(`\n====C模式结果====`);
+    guiPrint(`打角状态：${res.angle}`);
+    guiPrint(`左阵列表达式：${res.expr_L} 共${res.nL}颗`);
+    guiPrint(`右阵列表达式：${res.expr_R} 共${res.nR}颗`);
+    guiPrint(`总TNT：${res.nL+res.nR}`);
+    guiPrint(`飞行tick：${res.t_land.toFixed(2)} (${(res.t_land/20).toFixed(2)}秒)`);
+    guiPrint(`落地 X=${res.land_pos[0].toFixed(4)} Z=${res.land_pos[2].toFixed(4)}`);
+    guiPrint(`水平偏差：${res.error.toFixed(4)}格`);
 }
-
-function resetAll(){
-    phys = JSON.parse(JSON.stringify(DEFAULT_PHYS));
-    configData = null;
-    configFileName = "无";
-    setPromptText("user");
-    try{localStorage.removeItem("phys");localStorage.removeItem("userName");}catch(e){}
-    terminal.textContent="";
-    showMainMenu();
+function runModeF_calc(){
+    clearOutput();
+    const px = parseFloat(document.getElementById("f_pe_x").value);
+    const py = parseFloat(document.getElementById("f_pe_y").value);
+    const pz = parseFloat(document.getElementById("f_pe_z").value);
+    const nL = parseInt(document.getElementById("f_nl").value);
+    const nR = parseInt(document.getElementById("f_nr").value);
+    const dir = document.getElementById("f_dir").value;
+    const yLand = parseFloat(document.getElementById("f_y_land").value);
+    if([px,py,pz,nL,nR,yLand].some(isNaN)){ guiPrint(""+ERR_MSG.input_invalid); return; }
+    const pearl = [px,py,pz]; const tnt_y = auto_tnt_y(py);
+    const [tntL,tntR] = get_tnt_pair(pearl, tnt_y, dir);
+    const [res,err] = solve_B(nL,nR,pearl,tntL,tntR,yLand);
+    if(!res){ guiPrint("计算失败："+ERR_MSG[err]); fCalcCache=null; return; }
+    fCalcCache = {pearl, v0:res.v0, t_land:res.t_land};
+    guiPrint(`【F模式｜弹道计算完成】`);
+    guiPrint(`飞行时间：${res.t_land.toFixed(4)} tick`);
+    guiPrint(`落点 X=${res.land_pos[0].toFixed(4)} Y=${res.land_pos[1].toFixed(4)} Z=${res.land_pos[2].toFixed(4)}`);
+    guiPrint(`运动状态：${res.y_state}`);
+    guiPrint("\n现在可以输入tick进行坐标查询");
 }
-
-function handleCommand(cmd){
-    const parts = cmd.trim().split(/\s+/);
-    const first = parts[0].toLowerCase();
-    if(first === "help"){
-        showHelpCommand();
-        return true;
-    }else if(first === "save"){
-        saveAllSettings();
-        return true;
-    }else if(first === "name"){
-        print("请输入新用户名：");
-        state="name_input";
-        return true;
-    }else if(first === "json"){
-        if(parts.length>=2 && parts[1].toLowerCase()==="help"){
-            print("{");
-            print('    "pearlX": 珍珠初始X,');
-            print('    "pearlY": 珍珠初始Y,');
-            print('    "pearlZ": 珍珠初始Z,');
-            print('    "arch": [火,控,架,构]');
-            print("}");
-            print("＜回车返回主界面＞");
-            state="wait_return_menu";
-        }else{
-            if(!configData){
-                print("当前未加载配置文件");
-            }else{
-                print(configFileName);
-                print("珍珠初始XYZ：");
-                print(configData.pearlX);
-                print(configData.pearlY);
-                print(configData.pearlZ);
-                print("火控架构");
-                print(configData.arch.join(" "));
-            }
-            print("＜回车返回主界面＞");
-            state="wait_return_menu";
+function runModeF_query(){
+    if(!fCalcCache){ guiPrint("请先执行【1.计算弹道】"); return; }
+    const q = document.getElementById("f_tick_query").value.trim();
+    const {pearl, v0, t_land} = fCalcCache;
+    guiPrint(`\n---Tick查询：${q}---`);
+    if(q.includes("_")){
+        const [st,et] = q.split("_").map(Number);
+        if(isNaN(st)||isNaN(et)||st<=0||et<=0||st>t_land||et>t_land||st>et){
+            guiPrint("tick范围输入非法"); return;
         }
-        return true;
-    }else if(first === "physics"){
-        if(parts.length>=3 && parts[1].toLowerCase()==="set"){
-            const pname = parts[2];
-            const pval = parseFloat(parts[3]);
-            const writableKeys = ["G","EYE","SINGLE_MAX","SEARCH_RANGE","MAX_TICK","MAX_SINGLE_ARRAY","AXIS_EPS","ERR_POS_EPS","MAX_DROP"];
-            if(!writableKeys.includes(pname)){
-                print("错误：该物理参数不可修改或不存在");
-                showPhysicsList();
-                return true;
-            }
-            if(isNaN(pval)){
-                print("错误：数值无效");
-                showPhysicsList();
-                return true;
-            }
-            phys[pname] = pval;
-            print("＜物理量修改成功＞");
-            showPhysicsList();
-        }else{
-            showPhysicsList();
+        for(let t=st;t<=et;t++){
+            const pos = get_pos(pearl, v0, t);
+            guiPrint(`tick ${t}: X=${pos[0].toFixed(6)}, Y=${pos[1].toFixed(6)}, Z=${pos[2].toFixed(6)}`);
         }
-        return true;
-    }else if(first === "reset"){
-        resetAll();
-        return true;
     }else{
-        print(`您输入的命令为未知命名，请发送help查询可用指令表`);
-        print("＜回车返回主界面＞");
-        state="wait_return_menu";
-        return true;
+        const tk = Number(q);
+        if(isNaN(tk)||tk<=0||tk>t_land){ guiPrint("tick数值非法"); return; }
+        const pos = get_pos(pearl, v0, tk);
+        guiPrint(`tick ${tk}：X=${pos[0].toFixed(6)}, Y=${pos[1].toFixed(6)}, Z=${pos[2].toFixed(6)}`);
     }
 }
-
-function handleInput(cmd) {
-    cmd = cmd.trim();
-    if(state === "name_input"){
-        setPromptText(cmd);
-        print("名称修改成功");
-        print("＜回车返回主界面＞");
-        state="wait_return_menu";
-        return;
-    }
-    if(state === "wait_return_menu"){
-        showMainMenu();
-        return;
-    }
-    if(f_state.active){
-        function_F_input(cmd);
-        return;
-    }
-    if(state === 'menu'){
-        const upperCmd = cmd.toUpperCase();
-        const menuOpts = ["A","B","C","D","E","F","G","H"];
-        if(menuOpts.includes(upperCmd)){
-            handleMenuSelect(upperCmd);
-            return;
-        }
-        if(cmd.length>0){
-            handleCommand(cmd);
-        }
-        return;
-    }
-    // 处于子模式（A/B/C/G输入坐标阶段），禁止输入A‑H
-    const subModes = ["A","B","C","G"];
-    if(subModes.includes(state)){
-        const upperCmd = cmd.toUpperCase();
-        if(["A","B","C","D","E","F","G","H"].includes(upperCmd)){
-            print("请保存设置后再进行计算");
-            print("＜回车保存并退出>");
-            state="wait_return_menu";
-            return;
-        }
-    }
-
-    if(state === 'A'){
-        try{
-            if(step ===0){
-                inputBuffer.dest_x = parseFloat(cmd);
-                step =1;
-                print("目的地Y：");
-            }else if(step ===1){
-                inputBuffer.dest_y = parseFloat(cmd);
-                step =2;
-                print("目的地Z：");
-            }else if(step ===2){
-                inputBuffer.dest_z = parseFloat(cmd);
-                if(configData){
-                    step =5;
-                }else{
-                    step =3;
-                    print("珍珠初始X：");
-                }
-            }else if(step ===3){
-                inputBuffer.pe_x = parseFloat(cmd);
-                step =4;
-                print("珍珠初始Y：");
-            }else if(step ===4){
-                inputBuffer.pe_y = parseFloat(cmd);
-                step =5;
-                print("珍珠初始Z：");
-            }else if(step ===5){
-                if(!configData){
-                    inputBuffer.pe_z = parseFloat(cmd);
-                }
-                const target = [inputBuffer.dest_x, inputBuffer.dest_y, inputBuffer.dest_z];
-                const pearl = [inputBuffer.pe_x, inputBuffer.pe_y, inputBuffer.pe_z];
-                if(Math.abs(pearl[1] - target[1]) < 1e-6){
-                    print("\n[璀璨计算系统]珍珠初始Y与目标Y相等，求解模式自动切换至G拦截模式尝试求解");
-                    const [res, err] = solve_intercept(pearl[0], pearl[2], target[0], target[2]);
-                    if(res === null){
-                        print(`\n计算失败：${ERR_MSG[err] || '未知错误'}`);
-                    }else{
-                        print("\n==== G模式拦截计算结果 ====");
-                        print(`打角方向     ：${res.direct}`);
-                        print(`左阵列TNT    ：${res.nL}`);
-                        print(`右阵列TNT    ：${res.nR}`);
-                        print(`总TNT数量    ：${res.total}`);
-                        print(`经过拦截点Tick：${res.t_intercept.toFixed(2)}`);
-                        print(`经过拦截点秒数：${(res.t_intercept/20).toFixed(3)} s`);
-                        print(`到达拦截点下落：${res.drop.toFixed(3)} 格（上限1.0）`);
-                        const cx = res.check_pos[0], cz = res.check_pos[2];
-                        print(`模拟校验拦截坐标：X=${cx.toFixed(3)}  Z=${cz.toFixed(3)}`);
-                    }
-                    print("\n回车返回主菜单...");
-                    step = 6;
-                    return;
-                }
-                const tnt_y = auto_tnt_y(pearl[1]);
-                const direct = auto_dir(target, pearl);
-                const [tntL, tntR] = get_tnt_pair(pearl, tnt_y, direct);
-                print(`系统自动判定发射方向：${direct}`);
-                print(`TNT统一高度：${tnt_y}`);
-                const [res, err_code] = solve_A(target, pearl, tntL, tntR);
-                if(res === null){
-                    print(`\n计算失败：${ERR_MSG[err_code] || '未知错误'}`);
-                }else{
-                    print(`\n【精度可用的组合方式】`);
-                    print(`${'排名'.padEnd(4)}${'左TNT'.padEnd(8)}${'右TNT'.padEnd(8)}${'水平偏差(格)'.padEnd(16)}`);
-                    print("-".repeat(36));
-                    for(let rank=0;rank<res.top5.length;rank++){
-                        const [err, nl, nr] = res.top5[rank];
-                        print(`  ${(rank+1).toString().padEnd(3)}${nl.toString().padEnd(8)}${nr.toString().padEnd(8)}${err.toFixed(6).padEnd(16)}`);
-                    }
-                    print(`\n==== A模式计算结果 ====`);
-                    print(`打角状态：${res.angle}`);
-                    print(`左阵列：${res.nL}颗  右阵列：${res.nR}颗`);
-                    print(`总TNT：${res.nL + res.nR}`);
-                    print(`飞行tick：${res.t_land.toFixed(2)} (${(res.t_land/20).toFixed(2)}秒)`);
-                    print(`落地坐标 X=${res.land_pos[0].toFixed(4)} Z=${res.land_pos[2].toFixed(4)}`);
-                    print(`水平偏差：${res.error.toFixed(4)}格`);
-                }
-                print("\n回车返回主菜单...");
-                step = 6;
-            }else if(step ===6){
-                showMainMenu();
-            }
-        }catch(e){
-            print(`\n输入错误：${ERR_MSG.input_invalid}`);
-            showMainMenu();
-        }
-        return;
-    }
-    if(state === 'B'){
-        try{
-            if(step ===0){
-                inputBuffer.nl = parseInt(cmd);
-                step =1;
-                print("右阵列TNT数量：");
-            }else if(step ===1){
-                inputBuffer.nr = parseInt(cmd);
-                step =2;
-                if(configData){
-                    inputBuffer.pe_x = configData.pearlX;
-                    inputBuffer.pe_y = configData.pearlY;
-                    inputBuffer.pe_z = configData.pearlZ;
-                    print("输入打角方向(x+/x-/z+/z-)：");
-                    step =5;
-                }else{
-                    print("珍珠初始X：");
-                }
-            }else if(step ===2){
-                inputBuffer.pe_x = parseFloat(cmd);
-                step =3;
-                print("珍珠初始Y：");
-            }else if(step ===3){
-                inputBuffer.pe_y = parseFloat(cmd);
-                step =4;
-                print("珍珠初始Z：");
-            }else if(step ===4){
-                inputBuffer.pe_z = parseFloat(cmd);
-                step =5;
-                print("输入打角方向(x+/x-/z+/z-)：");
-            }else if(step ===5){
-                inputBuffer.direct = cmd.trim().toLowerCase();
-                step =6;
-                print("目标落地Y高度：");
-            }else if(step ===6){
-                inputBuffer.y_land = parseFloat(cmd);
-                const pearl = [inputBuffer.pe_x, inputBuffer.pe_y, inputBuffer.pe_z];
-                const tnt_y = auto_tnt_y(inputBuffer.pe_y);
-                const [tntL, tntR] = get_tnt_pair(pearl, tnt_y, inputBuffer.direct);
-                const [res, err_code] = solve_B(inputBuffer.nl, inputBuffer.nr, pearl, tntL, tntR, inputBuffer.y_land);
-                if(res === null){
-                    print(`\n计算失败：${ERR_MSG[err_code] || '未知错误'}`);
-                }else{
-                    print(`\n==== B模式计算结果 ====`);
-                    print(`打角状态：${res.angle}`);
-                    print(`飞行tick：${res.t_land.toFixed(2)} (${(res.t_land/20).toFixed(2)}秒)`);
-                    print(`落点坐标 X=${res.land_pos[0].toFixed(4)}, Y=${res.land_pos[1].toFixed(4)}, Z=${res.land_pos[2].toFixed(4)}`);
-                    print(`竖直运动状态：${res.y_state}`);
-                }
-                print("\n回车返回主菜单...");
-                step =7;
-            }else if(step ===7){
-                showMainMenu();
-            }
-        }catch(e){
-            print(`\n输入错误：${ERR_MSG.input_invalid}`);
-            showMainMenu();
-        }
-        return;
-    }
-    if(state === 'C'){
-        try{
-            if(step ===0){
-                if(cmd.trim()===""){
-                    inputBuffer.arch = [];
-                }else{
-                    inputBuffer.arch = cmd.trim().split(/\s+/).map(x=>parseInt(x));
-                }
-                step =1;
-                print("目的地X：");
-            }else if(step ===1){
-                inputBuffer.dest_x = parseFloat(cmd);
-                step =2;
-                print("目的地Y：");
-            }else if(step ===2){
-                inputBuffer.dest_y = parseFloat(cmd);
-                step =3;
-                print("目的地Z：");
-            }else if(step ===3){
-                inputBuffer.dest_z = parseFloat(cmd);
-                const pearl = [inputBuffer.pe_x, inputBuffer.pe_y, inputBuffer.pe_z];
-                const target = [inputBuffer.dest_x, inputBuffer.dest_y, inputBuffer.dest_z];
-                const tnt_y = auto_tnt_y(pearl[1]);
-                const direct = auto_dir(target, pearl);
-                const [tntL, tntR] = get_tnt_pair(pearl, tnt_y, direct);
-                print(`系统自动判定发射方向：${direct}`);
-                print(`TNT统一高度：${tnt_y}`);
-                const archList = inputBuffer.arch;
-                const [res, err_code] = solve_C_fast(target, pearl, tntL, tntR, archList);
-                if(res === null){
-                    print(`\n计算失败：${ERR_MSG[err_code] || '未知错误'}`);
-                }else{
-                    print(`\n==== C模式【自定义架构】计算结果 ====`);
-                    print(`打角状态：${res.angle}`);
-                    print(`左阵列表达式：${res.expr_L}  共${res.nL}颗`);
-                    print(`右阵列表达式：${res.expr_R}  共${res.nR}颗`);
-                    print(`总TNT：${res.nL + res.nR}`);
-                    print(`飞行tick：${res.t_land.toFixed(2)} (${(res.t_land/20).toFixed(2)}秒)`);
-                    print(`落地坐标 X=${res.land_pos[0].toFixed(4)} Z=${res.land_pos[2].toFixed(4)}`);
-                    print(`水平偏差：${res.error.toFixed(4)}格`);
-                }
-                print("\n回车返回主菜单...");
-                step =4;
-            }else if(step ===4){
-                showMainMenu();
-            }
-        }catch(e){
-            print(`\n输入错误：${ERR_MSG.input_invalid}`);
-            showMainMenu();
-        }
-        return;
-    }
-    if(state === 'G'){
-        try{
-            if(step ===0){
-                inputBuffer.px = parseFloat(cmd);
-                step =1;
-                print("珍珠初始 Z：");
-            }else if(step ===1){
-                inputBuffer.pz = parseFloat(cmd);
-                step =2;
-                print("拦截目标 X：");
-            }else if(step ===2){
-                inputBuffer.ix = parseFloat(cmd);
-                step =3;
-                print("拦截目标 Z：");
-            }else if(step ===3){
-                inputBuffer.iz = parseFloat(cmd);
-                const [res, err_code] = solve_intercept(inputBuffer.px, inputBuffer.pz, inputBuffer.ix, inputBuffer.iz);
-                if(res === null){
-                    print(`\n计算失败：${ERR_MSG[err_code] || '未知错误'}`);
-                }else{
-                    print(`\n==== G模式拦截求解结果 ====`);
-                    print(`打角方向     ：${res.direct}`);
-                    print(`左阵列TNT    ：${res.nL}`);
-                    print(`右阵列TNT    ：${res.nR}`);
-                    print(`总TNT数量    ：${res.total}`);
-                    print(`经过拦截点Tick：${res.t_intercept.toFixed(2)}`);
-                    print(`经过拦截点秒数：${(res.t_intercept/20).toFixed(3)} s`);
-                    print(`到达拦截点下落：${res.drop.toFixed(3)} 格（上限1.0）`);
-                    const cx = res.check_pos[0], cz = res.check_pos[2];
-                    print(`模拟校验拦截坐标：X=${cx.toFixed(3)}  Z=${cz.toFixed(3)}`);
-                }
-                print("\n回车返回主菜单...");
-                step =4;
-            }else if(step ===4){
-                showMainMenu();
-            }
-        }catch(e){
-            print(`\n输入错误：${ERR_MSG.input_invalid}`);
-            showMainMenu();
-        }
-        return;
-    }
+function runModeG(){
+    clearOutput();
+    const px = parseFloat(document.getElementById("g_pe_x").value);
+    const pz = parseFloat(document.getElementById("g_pe_z").value);
+    const ix = parseFloat(document.getElementById("g_ix").value);
+    const iz = parseFloat(document.getElementById("g_iz").value);
+    if([px,pz,ix,iz].some(isNaN)){ guiPrint(""+ERR_MSG.input_invalid); return; }
+    guiPrint(`【G模式｜拦截求解】珍珠X=${px} Z=${pz}｜拦截X=${ix} Z=${iz}｜珍珠Y固定=${phys.FIX_PEARL_Y}`);
+    const [res,err] = solve_intercept(px,pz,ix,iz);
+    if(!res){ guiPrint("\n计算失败："+ERR_MSG[err]); return; }
+    guiPrint(`\n====G拦截结果====`);
+    guiPrint(`打角方向     ：${res.direct}`);
+    guiPrint(`左阵列TNT    ：${res.nL}`);
+    guiPrint(`右阵列TNT    ：${res.nR}`);
+    guiPrint(`总TNT数量    ：${res.total}`);
+    guiPrint(`经过拦截点Tick：${res.t_intercept.toFixed(2)}`);
+    guiPrint(`经过拦截点秒数：${(res.t_intercept/20).toFixed(3)} s`);
+    guiPrint(`到达拦截点下落：${res.drop.toFixed(3)} 格（上限${phys.MAX_DROP}）`);
+    guiPrint(`校验拦截坐标：X=${res.check_pos[0].toFixed(3)} Z=${res.check_pos[2].toFixed(3)}`);
 }
-
-function handleMenuSelect(mode){
-    inputBuffer={};
-    step=0;
-    if(mode === 'D'){
-        print("\n程序已关闭");
-        return;
-    }else if(mode === 'E'){
-        showHelp();
-        return;
-    }else if(mode === 'H'){
-        print("\n==== H模式：读取配置JSON ====");
-        print("请在弹出的文件管理器选择json配置文件");
-        openFileChooser();
-        return;
-    }else if(mode === 'A'){
-        state = 'A';
-        step =0;
-        print("\n==== A模式：落点反推TNT ====");
-        if(configData){
-            print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
-            inputBuffer.pe_x = configData.pearlX;
-            inputBuffer.pe_y = configData.pearlY;
-            inputBuffer.pe_z = configData.pearlZ;
-            print("目的地X：");
-            step =0;
-        }else{
-            print("目的地X：");
-        }
-    }else if(mode === 'B'){
-        state = 'B';
-        step =0;
-        print("\n==== B模式：TNT正向算落点 ====");
-        if(configData){
-            print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
-            inputBuffer.pe_x = configData.pearlX;
-            inputBuffer.pe_y = configData.pearlY;
-            inputBuffer.pe_z = configData.pearlZ;
-            print("左阵列TNT数量：");
-            step =0;
-        }else{
-            print("左阵列TNT数量：");
-        }
-    }else if(mode === 'C'){
-        state = 'C';
-        step =0;
-        print("\n==== C模式 自定义火控架构 ====");
-        if(configData){
-            inputBuffer.arch = configData.arch;
-            print(`已加载火控架构集合：${inputBuffer.arch}`);
-            print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
-            inputBuffer.pe_x = configData.pearlX;
-            inputBuffer.pe_y = configData.pearlY;
-            inputBuffer.pe_z = configData.pearlZ;
-            print("目的地X：");
-            step =1;
-        }else{
-            print("输入架构数字（空格分隔，直接回车无限制）：");
-        }
-    }else if(mode === 'F'){
-        function_F_start();
-    }else if(mode === 'G'){
-        state = 'G';
-        step =0;
-        print("\n==== G模式：拦截求解模式 ====");
-        if(configData){
-            print(`已加载配置珍珠坐标 X=${configData.pearlX},Y=${configData.pearlY},Z=${configData.pearlZ}`);
-            inputBuffer.px = configData.pearlX;
-            inputBuffer.pz = configData.pearlZ;
-            print("拦截目标 X：");
-            step =2;
-        }else{
-            print("珍珠初始 X：");
-        }
-    }
-}
-
-// 绑定回车/空格/Tab事件（璀璨16.2：回车发送联想补全内容，空格/Tab输入补齐）
-input.addEventListener('keydown', function(e){
-    if(e.isComposing) return;
-    // 空格：直接补全灰色提示内容（电脑端Tab同样效果，兼容旧版安卓键盘键名）
-    if(e.key === ' ' || e.key === 'Tab' || e.key === 'Spacebar' || e.keyCode === 32){
-        if(completeHint()){
-            e.preventDefault();
-        }
-        return;
-    }
-    if(e.key === 'Enter'){
-        let cmd = input.value;
-        // 主界面/指令界面：正在输入未完成部分时，回车发送联想补全后的内容
-        if(state === 'menu' && !f_state.active){
-            const pred = computePrediction(cmd);
-            if(pred.kind === 'complete' && !/\s$/.test(cmd)){
-                cmd = cmd + pred.text;
-            }
-        }
-        print(`${userName}> ${cmd}`);
-        handleInput(cmd);
-        input.value = "";
-        lastValue = "";
-        updateSuggestion();
-    }
-});
-
-// 实时刷新输入提示与预测层；手机端虚拟键盘空格只触发input事件时，同样执行空格补全
-input.addEventListener('input', function(){
-    const v = input.value;
-    if(v.length > lastValue.length){
-        const added = v.slice(lastValue.length);
-        // 新输入为空白字符（手机虚拟键盘空格）：按空格补全逻辑处理
-        if(/^\s+$/.test(added) && lastValue.length > 0){
-            input.value = lastValue;
-            if(!completeHint()){
-                // 无灰色提示可补全：保留用户输入的尾随空格（不误报、不影响执行）
-                input.value = lastValue + added;
-                lastValue = input.value;
-            }
-        }
-    }
-    lastValue = input.value;
-    updateSuggestion();
-});
-
-// 页面加载初始化
-(function initLoad(){
+// 页面加载读取本地存储物理参数
+(function init(){
     try{
         const savedPhys = localStorage.getItem("phys");
-        const savedName = localStorage.getItem("userName");
-        if(savedPhys){
-            phys = JSON.parse(savedPhys);
-        }
-        if(savedName){
-            setPromptText(savedName);
-        }
-    }catch(ex){}
-    showMainMenu();
-    updateSuggestion();
+        if(savedPhys) phys = JSON.parse(savedPhys);
+    }catch(e){}
 })();
 </script>
 </body>
