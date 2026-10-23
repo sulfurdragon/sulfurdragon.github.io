@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>璀璨17基岩版珍珠炮计算器｜纯图形UI</title>
+<title>璀璨17基岩版珍珠炮计算器</title>
 <style>
 :root{
     --bg:#0a0e13;
@@ -213,17 +213,17 @@ hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line-soft);}
 <div class="container">
     <header>
         <h1>璀璨17｜基岩版珍珠炮计算器</h1>
-        <div class="subtitle">TNT 阵列弹道仿真 · 落点反推 · 拦截求解</div>
+        <div class="subtitle">TNT 阵列弹道仿真 落点反推 拦截求解</div>
     </header>
     <!-- 模式选择 -->
     <div class="panel">
         <h2>计算模式</h2>
         <div class="mode-bar">
-            <button id="modeBtnA" class="mode" onclick="switchMode('A')">A 落点反推TNT</button>
-            <button id="modeBtnB" class="mode" onclick="switchMode('B')">B TNT正向算落点</button>
-            <button id="modeBtnF" class="mode" onclick="switchMode('F')">F 指定配置+轨迹查询</button>
-            <button id="modeBtnG" class="mode" onclick="switchMode('G')">G 拦截求解</button>
-            <button id="romToggle" class="mode" onclick="toggleRomMode()">ROM模式</button>
+            <button id="modeBtnA" class="mode" onclick="switchMode('A')">三维计算</button>
+            <button id="modeBtnB" class="mode" onclick="switchMode('B')">落点计算</button>
+            <button id="modeBtnF" class="mode" onclick="switchMode('F')">轨迹查询</button>
+            <button id="modeBtnG" class="mode" onclick="switchMode('G')">拦截求解</button>
+            <button id="romToggle" class="mode" onclick="toggleRomMode()">ROM配置</button>
             <button class="secondary" onclick="openPhysicsPanel()">物理参数</button>
             <button class="secondary" onclick="openHelpPanel()">使用帮助</button>
             <button class="danger" onclick="guiResetAll()">全部重置</button>
@@ -239,18 +239,18 @@ hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line-soft);}
         <div>
             <!-- A模式 -->
             <div id="panelA" class="panel hidden">
-                <h2>A模式：已知落点反推TNT</h2>
+                <h2>三维模式：当量计算</h2>
                 <div class="form-row"><label>珍珠X</label><input id="a_pe_x" type="number" step="any"></div>
                 <div class="form-row"><label>珍珠Y</label><input id="a_pe_y" type="number" step="any"></div>
                 <div class="form-row"><label>珍珠Z</label><input id="a_pe_z" type="number" step="any"></div>
                 <div class="form-row"><label>目标X</label><input id="a_t_x" type="number" step="any"></div>
                 <div class="form-row"><label>目标Y</label><input id="a_t_y" type="number" step="any"></div>
                 <div class="form-row"><label>目标Z</label><input id="a_t_z" type="number" step="any"></div>
-                <div class="mode-bar"><button onclick="runModeA()">开始计算A</button></div>
+                <div class="mode-bar"><button onclick="runModeA()">开始计算</button></div>
             </div>
             <!-- B模式 -->
             <div id="panelB" class="panel hidden">
-                <h2>B模式：给定TNT算落点</h2>
+                <h2>落点计算</h2>
                 <div class="form-row"><label>珍珠X</label><input id="b_pe_x" type="number" step="any"></div>
                 <div class="form-row"><label>珍珠Y</label><input id="b_pe_y" type="number" step="any"></div>
                 <div class="form-row"><label>珍珠Z</label><input id="b_pe_z" type="number" step="any"></div>
@@ -266,11 +266,11 @@ hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line-soft);}
                     </select>
                 </div>
                 <div class="form-row"><label>落地Y高度</label><input id="b_y_land" type="number" step="any"></div>
-                <div class="mode-bar"><button onclick="runModeB()">开始计算B</button></div>
+                <div class="mode-bar"><button onclick="runModeB()">开始计算</button></div>
             </div>
             <!-- F模式 -->
             <div id="panelF" class="panel hidden">
-                <h2>F模式：指定配置+轨迹查询</h2>
+                <h2>轨迹查询：逐t查询</h2>
                 <div class="form-row"><label>珍珠X</label><input id="f_pe_x" type="number" step="any"></div>
                 <div class="form-row"><label>珍珠Y</label><input id="f_pe_y" type="number" step="any"></div>
                 <div class="form-row"><label>珍珠Z</label><input id="f_pe_z" type="number" step="any"></div>
@@ -288,25 +288,25 @@ hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line-soft);}
                 <div class="form-row"><label>落地Y高度</label><input id="f_y_land" type="number" step="any"></div>
                 <div class="info-text">先计算弹道，之后可查询tick坐标</div>
                 <div class="mode-bar">
-                    <button onclick="runModeF_calc()">1.计算弹道</button>
+                    <button onclick="runModeF_calc()">计算弹道</button>
                 </div>
                 <hr class="sep">
                 <div class="form-row">
                     <label>游戏刻查询</label><input id="f_tick_query" placeholder="单个tick或 10_50">
                 </div>
                 <div class="mode-bar">
-                    <button onclick="runModeF_query()">2.查询坐标</button>
+                    <button onclick="runModeF_query()">查询坐标</button>
                 </div>
             </div>
             <!-- G模式 -->
             <div id="panelG" class="panel hidden">
-                <h2>G模式：拦截求解</h2>
-                <div class="info-text">珍珠Y使用物理参数【珍珠默认Y坐标】</div>
+                <h2>拦截模式：Y面拦截</h2>
+                <div class="info-text">珍珠Y面使用虚拟三维面</div>
                 <div class="form-row"><label>珍珠X</label><input id="g_pe_x" type="number" step="any"></div>
                 <div class="form-row"><label>珍珠Z</label><input id="g_pe_z" type="number" step="any"></div>
                 <div class="form-row"><label>拦截目标X</label><input id="g_ix" type="number" step="any"></div>
                 <div class="form-row"><label>拦截目标Z</label><input id="g_iz" type="number" step="any"></div>
-                <div class="mode-bar"><button onclick="runModeG()">开始计算G拦截</button></div>
+                <div class="mode-bar"><button onclick="runModeG()">开始计算</button></div>
             </div>
             <!-- 物理参数面板 -->
             <div id="panelPhys" class="panel hidden">
@@ -334,12 +334,12 @@ hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line-soft);}
             <div id="panelHelp" class="panel hidden">
                 <h2>使用帮助</h2>
                 <div class="result-card" style="min-height:0;max-height:340px;">
-A模式｜已知落点坐标，反推左右阵列TNT颗数。当目标Y高于珍珠Y时，自动计算抛射所需Y轴动量；当目标Y与珍珠Y相等时，自动切入G模式接管。
-B模式｜输入珍珠坐标+左右TNT数量+方向，正向算出珍珠落点。
-F模式｜给定全套配置，计算飞行弹道；支持查询任意tick时刻珍珠空间坐标。
-G模式｜拦截求解，珍珠Y使用物理参数【珍珠默认Y坐标】；约束下落≤拦截允许最大下落格数，并寻找最少TNT用量。
+三维计算｜已知落点坐标，反推左右阵列TNT颗数。当目标Y高于珍珠Y时，自动计算抛射所需Y轴动量；当目标Y与珍珠Y相等时，自动切入G模式接管。
+落点计算｜输入珍珠坐标+左右TNT数量+方向，正向算出珍珠落点。
+轨迹查询｜给定全套配置，计算飞行弹道；支持查询任意tick时刻珍珠空间坐标。
+拦截求解｜拦截求解，珍珠Y使用物理参数【珍珠默认Y坐标】；约束下落≤拦截允许最大下落格数，并寻找最少TNT用量。
 【ROM模式】
-点击「ROM模式」按钮开启（按钮变绿），再点一次关闭。开启后 A / G 模式只在火控架构能够组合出的TNT数量里寻解，并给出可直接使用的阵列表达式。
+点击「ROM模式」按钮开启（按钮变绿），再点一次关闭。开启后只在火控架构能够组合出的TNT数量里寻解，并给出可直接使用的阵列表达式。
 若已加载JSON配置文件，直接采用其中的 arch；若未加载，会弹窗让你输入火控架构，保存后生效；在弹窗点「取消」则ROM模式自动关闭。
 【JSON配置文件】
 上传后会自动填入各模式表单。格式示例：
@@ -350,12 +350,13 @@ G模式｜拦截求解，珍珠Y使用物理参数【珍珠默认Y坐标】；�
   "arch":[2,4,8,16]
 }
 适用：基岩版1.16.210+，鎏龍霄飓原版开源。
+联系作者beissong2025@outlook.com 官方QQ(星火计划)1104379318
                 </div>
                 <div class="mode-bar"><button class="secondary" onclick="closeHelpPanel()">关闭帮助</button></div>
             </div>
             <!-- H模式 文件上传 -->
             <div class="panel">
-                <h2>H模式｜加载JSON配置文件</h2>
+                <h2>加载JSON配置文件</h2>
                 <input type="file" id="guiFileInput" class="visually-hidden" accept=".json,application/json,text/plain,application/octet-stream">
                 <div class="file-drop" onclick="openFileChooser()">
                     <span class="file-drop-title">选择 JSON 配置文件</span>
@@ -398,17 +399,7 @@ G模式｜拦截求解，珍珠Y使用物理参数【珍珠默认Y坐标】；�
     </div>
 </div>
 <script>
-// ============【璀璨17核心计算库】============
-/* ============================================================
- * 璀璨17 图形版 —— 维护记录
- * v22  2026-10-23  上一任收尾版：A 模式统一寻优（平射改为真实正向仿真穷举）
- * v23  2026-10-23  接手修复：45° 单侧解 / find_land_time 高差判定
- * v24  2026-10-23  按要求回归原计算逻辑（仅 G 模式求最少 TNT；A 模式抛射不优化当量）：
- *                  1) 移除 MAX_V0Y 与"省料/精度"权衡表，A 模式输出恢复原样
- *                  2) C 模式改为「ROM模式」开关：开启后 A / G 在火控架构内寻解
- *                  3) 上传配置自动填表；保存物理参数后自动回读
- *                  4) 界面现代化（外观重做，操作逻辑不变）
- * ============================================================ */
+
 const DEFAULT_PHYS = {
     G: 0.025,
     R: 8.0,
@@ -576,11 +567,6 @@ function solve_float_opt(target, pearl, tntL, tntR) {
     return [nLf, nRf, t_est];
 }
 
-/* ============================================================
- * 全新重写的 A 模式统一寻优算法
- * 直接基于解析比例约束进行全局网格搜索。
- * 突破了原版浮点迭代在长距离下堕时的局部死区（解决 4 格误差问题）
- * ============================================================ */
 function solve_A(target, pearl, tntL, tntR) {
     const [tx, ty, tz] = target;
     const [px, py, pz] = pearl;
@@ -596,9 +582,6 @@ function solve_A(target, pearl, tntL, tntR) {
     const a = vL[0], c = vL[2];
     const b = vR[0], d = vR[2];
     
-    // 约束水平方向的推力比例：解 nL*K1 + nR*K2 = 0，保证合成速度矢量指向目标。
-    // 注意 45° 等奇异方向会出现 K2=0 或 K1=0，此时正确解是【单侧阵列】（nL=0 / nR=0）。
-    // 旧版用 K1*K2<0 判断、否则 0.5 兜底，会让 45° 目标静默返回数千米误差的错误解。
     const K1 = a * dz - c * dx;
     const K2 = b * dz - d * dx;
     const K_EPS = 1e-9;
@@ -776,7 +759,7 @@ function solve_t_for_target(vx, vz, dx_target, dz_target) {
 }
 
 /* ============================================================
- * G 拦截模式核心算法 (优化版)
+ * 拦截模式核心算法 (优化版)
  * ============================================================ */
 function solve_intercept(px, pz, ix, iz, pyOverride) {
     const py = (pyOverride !== undefined && pyOverride !== null) ? pyOverride : phys.FIX_PEARL_Y;
@@ -1105,13 +1088,13 @@ function savePhysFromGui(){
     localStorage.setItem("phys",JSON.stringify(phys));
     // 保存后自动回读一遍，把修正值（如二分次数取整）同步回界面
     readPhysToGui();
-    guiPrint("✅物理参数已保存至本地存储");
+    guiPrint("物理参数已保存至本地存储");
 }
 function resetPhysDefault(){
     phys = JSON.parse(JSON.stringify(DEFAULT_PHYS));
     localStorage.setItem("phys",JSON.stringify(phys));
     readPhysToGui();
-    guiPrint("✅已恢复全部物理参数为原版默认");
+    guiPrint("已恢复全部物理参数为原版默认");
 }
 function guiResetAll(){
     phys = JSON.parse(JSON.stringify(DEFAULT_PHYS));
@@ -1124,7 +1107,7 @@ function guiResetAll(){
     document.getElementById("fileLoadHint").innerText="未加载文件";
     closeRomModal();
     clearOutput();
-    guiPrint("✅全部状态重置完成");
+    guiPrint("全部状态重置完成");
 }
 
 /* ---------- ROM 模式 ---------- */
@@ -1153,7 +1136,7 @@ function toggleRomMode(){
     if (romEnabled) {
         romEnabled = false;
         updateRomButton();
-        guiPrint("ROM模式已关闭，A / G 恢复默认求解。");
+        guiPrint("ROM模式已关闭，恢复默认求解。");
         return;
     }
     // 已加载配置文件则直接使用其中的火控架构
@@ -1162,7 +1145,7 @@ function toggleRomMode(){
         romArch = cfgArch;
         romEnabled = true;
         updateRomButton();
-        guiPrint(`✅ROM模式已启用：使用配置文件中的火控架构 [${romArch.join(",")}]`);
+        guiPrint(`ROM模式已启用：使用配置文件中的火控架构 [${romArch.join(",")}]`);
         return;
     }
     openRomModal();
@@ -1170,14 +1153,14 @@ function toggleRomMode(){
 function saveRomArch(){
     const arr = parse_arch_text(document.getElementById("romArchInput").value);
     if (!arr.length) {
-        guiPrint("⚠火控架构不能为空，请输入如 2 4 8 16");
+        guiPrint("火控架构不能为空，请输入如 2 4 8 16");
         return;
     }
     romArch = arr;
     romEnabled = true;
     closeRomModal();
     updateRomButton();
-    guiPrint(`✅ROM模式已启用：火控架构 [${romArch.join(",")}]`);
+    guiPrint(`ROM模式已启用：火控架构 [${romArch.join(",")}]`);
 }
 function cancelRomArch(){
     closeRomModal();
@@ -1199,14 +1182,14 @@ document.getElementById("guiFileInput").onchange = async function(e){
         const txt = await file.text();
         const jo = JSON.parse(txt);
         if(!jo || typeof jo !== "object" || !("pearlX" in jo)||!("pearlY" in jo)||!("pearlZ" in jo)||!("arch" in jo)){
-            guiPrint("❌"+ERR_MSG.json_missing);
+            guiPrint(""+ERR_MSG.json_missing);
             document.getElementById("fileLoadHint").innerText="解析失败";
             return;
         }
         configData = jo; configFileName = file.name;
         document.getElementById("guiConfigStatus").innerText = configFileName;
         document.getElementById("fileLoadHint").innerText = "已加载："+configFileName;
-        guiPrint("✅JSON配置加载成功："+configFileName);
+        guiPrint("JSON配置加载成功："+configFileName);
         // 上传后自动填入表单
         fillFormFromConfig();
         // ROM 开启时，火控架构直接跟随配置文件
@@ -1219,13 +1202,13 @@ document.getElementById("guiFileInput").onchange = async function(e){
             }
         }
     }catch(err){
-        guiPrint("❌"+ERR_MSG.json_parse_err);
+        guiPrint(""+ERR_MSG.json_parse_err);
         document.getElementById("fileLoadHint").innerText="解析失败";
     }
     this.value="";
 };
 function fillFormFromConfig(){
-    if(!configData){ guiPrint("⚠没有已加载的配置文件"); return; }
+    if(!configData){ guiPrint("没有已加载的配置文件"); return; }
     const px = configData.pearlX, py=configData.pearlY, pz=configData.pearlZ;
     document.getElementById("a_pe_x").value=px; document.getElementById("a_pe_y").value=py; document.getElementById("a_pe_z").value=pz;
     document.getElementById("b_pe_x").value=px; document.getElementById("b_pe_y").value=py; document.getElementById("b_pe_z").value=pz;
@@ -1236,7 +1219,7 @@ function fillFormFromConfig(){
         romArch = cfgArch;
         document.getElementById("romArchInput").value = cfgArch.join(" ");
     }
-    guiPrint("✅已把JSON配置填入各模式表单");
+    guiPrint("已把JSON配置填入各模式表单");
 }
 
 function runModeA(){
@@ -1247,20 +1230,20 @@ function runModeA(){
     const tx = parseFloat(document.getElementById("a_t_x").value);
     const ty = parseFloat(document.getElementById("a_t_y").value);
     const tz = parseFloat(document.getElementById("a_t_z").value);
-    if([px,py,pz,tx,ty,tz].some(isNaN)){ guiPrint("❌"+ERR_MSG.input_invalid); return; }
+    if([px,py,pz,tx,ty,tz].some(isNaN)){ guiPrint(""+ERR_MSG.input_invalid); return; }
 
     // 检查Y坐标是否几乎相等，如果是则自动切换为G模式（拦截模式）接管
     if (Math.abs(py - ty) < 0.01) {
-        guiPrint(`【A模式｜自动跳转拦截】\n珍珠(${px.toFixed(2)},${py.toFixed(2)},${pz.toFixed(2)}) 目标(${tx.toFixed(2)},${ty.toFixed(2)},${tz.toFixed(2)})\n`);
-        guiPrint(`✨ 坐标差TNT比模型已接管计算 (Y坐标几乎相等)`);
+        guiPrint(`拦截模式\n珍珠(${px.toFixed(2)},${py.toFixed(2)},${pz.toFixed(2)}) 目标(${tx.toFixed(2)},${ty.toFixed(2)},${tz.toFixed(2)})\n`);
+        guiPrint(`坐标差TNT比模型已接管计算`);
 
         const [resG, errG] = romEnabled
             ? solve_intercept_rom(px, pz, tx, tz, py, romArch)
             : solve_intercept(px, pz, tx, tz, py);
-        if (!resG) { guiPrint("\n❌计算失败：" + ERR_MSG[errG]); return; }
+        if (!resG) { guiPrint("\n计算失败：" + ERR_MSG[errG]); return; }
 
         const dropPct = phys.MAX_DROP > 0 ? (resG.drop / phys.MAX_DROP * 100).toFixed(1) : "0.0";
-        guiPrint(`\n====G拦截结果====`);
+        guiPrint(`\n====拦截模式结果====`);
         guiPrint(`打角方向     ：${resG.direct}`);
         guiPrint(`左阵列TNT    ：${resG.nL}`);
         guiPrint(`右阵列TNT    ：${resG.nR}`);
@@ -1279,11 +1262,11 @@ function runModeA(){
     const pearl = [px,py,pz]; const target=[tx,ty,tz];
     const direct = auto_dir(target, pearl); const tnt_y = auto_tnt_y(py);
     const [tntL,tntR] = get_tnt_pair(pearl, tnt_y, direct);
-    guiPrint(`【A模式｜落点反推TNT】\n珍珠(${px.toFixed(2)},${py.toFixed(2)},${pz.toFixed(2)}) 目标(${tx.toFixed(2)},${ty.toFixed(2)},${tz.toFixed(2)})\n自动判定方向：${direct}｜TNT高度=${tnt_y.toFixed(3)}`);
+    guiPrint(`【三维模式：当量求解】\n珍珠(${px.toFixed(2)},${py.toFixed(2)},${pz.toFixed(2)}) 目标(${tx.toFixed(2)},${ty.toFixed(2)},${tz.toFixed(2)})\n自动判定方向：${direct}｜TNT高度=${tnt_y.toFixed(3)}`);
     const [res,err] = romEnabled
         ? solve_A_rom(target, pearl, tntL, tntR, romArch)
         : solve_A(target, pearl, tntL, tntR);
-    if(!res){ guiPrint("\n❌计算失败："+ERR_MSG[err]); return; }
+    if(!res){ guiPrint("\n计算失败："+ERR_MSG[err]); return; }
     guiPrint(`\n====前五候选组合（排名｜左｜右｜水平偏差）====`);
     const rows = Array.isArray(res.top5) ? res.top5 : [[res.error, res.nL, res.nR]];
     for(let i=0;i<rows.length;i++) guiPrint(` ${i+1}\t${rows[i][1]}\t${rows[i][2]}\t${rows[i][0].toFixed(6)}`);
@@ -1315,12 +1298,12 @@ function runModeB(){
     const nR = parseInt(document.getElementById("b_nr").value);
     const dir = document.getElementById("b_dir").value;
     const yLand = parseFloat(document.getElementById("b_y_land").value);
-    if([px,py,pz,nL,nR,yLand].some(isNaN)){ guiPrint("❌"+ERR_MSG.input_invalid); return; }
+    if([px,py,pz,nL,nR,yLand].some(isNaN)){ guiPrint(""+ERR_MSG.input_invalid); return; }
     const pearl = [px,py,pz]; const tnt_y = auto_tnt_y(py);
     const [tntL,tntR] = get_tnt_pair(pearl, tnt_y, dir);
-    guiPrint(`【B模式｜TNT正向算落点】\n珍珠(${px},${py},${pz})｜nL=${nL} nR=${nR}｜方向${dir}｜落地Y=${yLand}`);
+    guiPrint(`【落点计算】\n珍珠(${px},${py},${pz})｜nL=${nL} nR=${nR}｜方向${dir}｜落地Y=${yLand}`);
     const [res,err] = solve_B(nL,nR,pearl,tntL,tntR,yLand);
-    if(!res){ guiPrint("\n❌计算失败："+ERR_MSG[err]); return; }
+    if(!res){ guiPrint("\n计算失败："+ERR_MSG[err]); return; }
     guiPrint(`\n====计算结果====`);
     guiPrint(`打角状态：${res.angle}`);
     guiPrint(`飞行tick：${res.t_land.toFixed(2)} (${(res.t_land/20).toFixed(2)}秒)`);
@@ -1337,27 +1320,27 @@ function runModeF_calc(){
     const nR = parseInt(document.getElementById("f_nr").value);
     const dir = document.getElementById("f_dir").value;
     const yLand = parseFloat(document.getElementById("f_y_land").value);
-    if([px,py,pz,nL,nR,yLand].some(isNaN)){ guiPrint("❌"+ERR_MSG.input_invalid); return; }
+    if([px,py,pz,nL,nR,yLand].some(isNaN)){ guiPrint(""+ERR_MSG.input_invalid); return; }
     const pearl = [px,py,pz]; const tnt_y = auto_tnt_y(py);
     const [tntL,tntR] = get_tnt_pair(pearl, tnt_y, dir);
     const [res,err] = solve_B(nL,nR,pearl,tntL,tntR,yLand);
-    if(!res){ guiPrint("❌计算失败："+ERR_MSG[err]); fCalcCache=null; return; }
+    if(!res){ guiPrint("计算失败："+ERR_MSG[err]); fCalcCache=null; return; }
     fCalcCache = {pearl, v0:res.v0, t_land:res.t_land};
-    guiPrint(`【F模式｜弹道计算完成】`);
+    guiPrint(`【弹道计算完成】`);
     guiPrint(`飞行时间：${res.t_land.toFixed(4)} tick`);
     guiPrint(`落点 X=${res.land_pos[0].toFixed(4)} Y=${res.land_pos[1].toFixed(4)} Z=${res.land_pos[2].toFixed(4)}`);
     guiPrint(`运动状态：${res.y_state}`);
-    guiPrint("\n👉现在可以输入tick进行坐标查询");
+    guiPrint("\n现在可以输入tick进行坐标查询");
 }
 
 function runModeF_query(){
-    if(!fCalcCache){ guiPrint("⚠请先执行【1.计算弹道】"); return; }
+    if(!fCalcCache){ guiPrint("请先执行【计算弹道】"); return; }
     const q = document.getElementById("f_tick_query").value.trim();
     const {pearl, v0, t_land} = fCalcCache;
     guiPrint(`\n---Tick查询：${q}---`);
     if(q.includes("_")){
         const parts = q.split("_");
-        if(parts.length !== 2){ guiPrint("⚠无效格式：请使用‘开始_结束’格式"); return; }
+        if(parts.length !== 2){ guiPrint("无效格式：请使用‘开始_结束’格式"); return; }
         const [st,et] = parts.map(Number);
         if(isNaN(st)||isNaN(et)||st<=0||et<=0||st>t_land||et>t_land||st>et){ guiPrint("⚠tick范围输入非法"); return; }
         for(let t=st;t<=et;t++){
@@ -1366,7 +1349,7 @@ function runModeF_query(){
         }
     }else{
         const tk = Number(q);
-        if(isNaN(tk)||tk<=0||tk>t_land){ guiPrint("⚠tick数值非法"); return; }
+        if(isNaN(tk)||tk<=0||tk>t_land){ guiPrint("tick数值非法"); return; }
         const pos = get_pos(pearl, v0, tk);
         guiPrint(`tick ${tk}：X=${pos[0].toFixed(6)}, Y=${pos[1].toFixed(6)}, Z=${pos[2].toFixed(6)}`);
     }
@@ -1378,15 +1361,15 @@ function runModeG(){
     const pz = parseFloat(document.getElementById("g_pe_z").value);
     const ix = parseFloat(document.getElementById("g_ix").value);
     const iz = parseFloat(document.getElementById("g_iz").value);
-    if([px,pz,ix,iz].some(isNaN)){ guiPrint("❌"+ERR_MSG.input_invalid); return; }
-    guiPrint(`【G模式｜拦截求解】珍珠X=${px} Z=${pz}｜拦截X=${ix} Z=${iz}｜珍珠Y固定=${phys.FIX_PEARL_Y}`);
+    if([px,pz,ix,iz].some(isNaN)){ guiPrint(""+ERR_MSG.input_invalid); return; }
+    guiPrint(`【拦截求解】珍珠X=${px} Z=${pz}｜拦截X=${ix} Z=${iz}｜珍珠Y固定=${phys.FIX_PEARL_Y}`);
     if (romEnabled) guiPrint(`ROM模式：在火控架构 [${(romArch || []).join(",")}] 内寻找最少TNT解`);
     const [res,err] = romEnabled
         ? solve_intercept_rom(px, pz, ix, iz, null, romArch)
         : solve_intercept(px, pz, ix, iz);
-    if(!res){ guiPrint("\n❌计算失败："+ERR_MSG[err]); return; }
+    if(!res){ guiPrint("\n计算失败："+ERR_MSG[err]); return; }
     const dropPct = phys.MAX_DROP > 0 ? (res.drop / phys.MAX_DROP * 100).toFixed(1) : "0.0";
-    guiPrint(`\n====G拦截结果====`);
+    guiPrint(`\n====拦截模式计算结果====`);
     guiPrint(`打角方向     ：${res.direct}`);
     guiPrint(`左阵列TNT    ：${res.nL}`);
     guiPrint(`右阵列TNT    ：${res.nR}`);
