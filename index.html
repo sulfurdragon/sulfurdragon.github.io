@@ -3,122 +3,236 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>璀璨17基岩版珍珠炮计算器</title>
+<title>璀璨17基岩版珍珠炮计算器｜纯图形UI</title>
 <style>
+:root{
+    --bg:#0a0e13;
+    --panel:#111a24;
+    --panel-2:#0d151d;
+    --line:#1e2b39;
+    --line-soft:#18242f;
+    --text:#e8eef5;
+    --muted:#8b9bb0;
+    --accent:#4cc2ff;
+    --accent-strong:#2b95d6;
+    --ok:#2ecc71;
+    --ok-strong:#1f9e57;
+    --danger:#e5484d;
+    --radius:14px;
+}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 body{
-    background:#121212;
-    color:#eee;
-    font-family:Consolas,"Courier New",monospace;
-    padding:12px;
+    background:
+        radial-gradient(900px 480px at 50% -8%, rgba(76,194,255,.10), transparent 65%),
+        radial-gradient(700px 420px at 100% 0%, rgba(46,204,113,.06), transparent 60%),
+        var(--bg);
+    background-attachment:fixed;
+    color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
     min-height:100vh;
+    padding:26px 16px 56px;
+    -webkit-font-smoothing:antialiased;
 }
-.container{
-    max-width:960px;
-    margin:0 auto;
-}
+.container{max-width:1080px;margin:0 auto;}
+header{margin-bottom:20px;}
 h1{
-    text-align:center;
-    color:#73d0ff;
-    margin-bottom:16px;
-    font-size:clamp(18px,4vw,24px);
+    font-size:clamp(19px,3.6vw,26px);
+    font-weight:650;
+    letter-spacing:.01em;
+    background:linear-gradient(92deg,#dff2ff,#4cc2ff 55%,#8ef0c0);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    margin-bottom:6px;
 }
+.subtitle{color:var(--muted);font-size:12.5px;letter-spacing:.02em;}
 .panel{
-    background:#1e1e1e;
-    border:1px solid #3a3a3a;
-    border-radius:8px;
-    padding:14px;
-    margin-bottom:14px;
+    background:linear-gradient(180deg,rgba(255,255,255,.028),rgba(255,255,255,0) 42%),var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.22);
 }
 .panel h2{
-    color:#73d0ff;
-    font-size:16px;
-    margin-bottom:10px;
+    color:var(--accent);
+    font-size:14px;
+    font-weight:600;
+    letter-spacing:.04em;
+    margin-bottom:13px;
+    display:flex;align-items:center;gap:9px;
 }
-.mode-bar{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    margin-bottom:10px;
+.panel h2::before{
+    content:"";width:3px;height:14px;border-radius:2px;
+    background:linear-gradient(180deg,var(--accent),rgba(76,194,255,.25));
 }
+.mode-bar{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:4px;}
 button{
-    background:#2b4866;
-    color:#fff;
-    border:none;
-    padding:7px 11px;
-    border-radius:5px;
+    background:#1b2937;
+    color:var(--text);
+    border:1px solid var(--line);
+    padding:9px 14px;
+    border-radius:10px;
     cursor:pointer;
     font-family:inherit;
     font-size:13px;
+    font-weight:500;
+    transition:background .16s ease,border-color .16s ease,transform .12s ease,box-shadow .16s ease,color .16s ease;
 }
-button:hover{background:#3b648c;}
-button.secondary{background:#444;}
-button.secondary:hover{background:#555;}
-button.danger{background:#662c2c;}
-button.danger:hover{background:#883838;}
+button:hover{background:#22384b;border-color:#2d4560;transform:translateY(-1px);}
+button:active{transform:translateY(0);}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+button.primary{
+    background:linear-gradient(180deg,#3aa7e0,#2a7fb5);
+    border-color:#3aa7e0;
+    color:#04121c;
+    font-weight:650;
+}
+button.primary:hover{background:linear-gradient(180deg,#4cb6ec,#2f8cc4);}
+button.secondary{background:#151f2a;color:#c3d2e2;}
+button.secondary:hover{background:#1c2a38;}
+button.danger{background:#2a1518;border-color:#4a1f23;color:#ffb4b6;}
+button.danger:hover{background:#3a1c20;border-color:#632a2f;}
+button.mode{padding:9px 15px;}
+button.mode.active{
+    background:linear-gradient(180deg,var(--ok),var(--ok-strong));
+    border-color:#3ee183;
+    color:#04170c;
+    font-weight:650;
+    box-shadow:0 0 0 3px rgba(46,204,113,.16),0 6px 18px rgba(46,204,113,.16);
+}
+button.active{
+    background:linear-gradient(180deg,var(--ok),var(--ok-strong));
+    border-color:#3ee183;
+    color:#04170c;
+    font-weight:650;
+    box-shadow:0 0 0 3px rgba(46,204,113,.16);
+}
 .form-row{
     display:flex;
     flex-wrap:wrap;
-    gap:8px;
+    gap:10px;
     align-items:center;
-    margin:7px 0;
+    margin:9px 0;
 }
-.form-row label{
-    width:110px;
-    flex-shrink:0;
-    font-size:13px;
-}
+.form-row label{width:132px;flex-shrink:0;font-size:12.5px;color:#b9c8d8;}
 .form-row input,.form-row select,textarea{
     flex:1;
-    min-width:120px;
-    background:#111;
-    color:#fff;
-    border:1px solid #444;
-    padding:6px 8px;
-    border-radius:4px;
-    font-family:inherit;
+    min-width:130px;
+    background:var(--panel-2);
+    color:var(--text);
+    border:1px solid var(--line-soft);
+    padding:9px 11px;
+    border-radius:9px;
+    font-family:ui-monospace,Consolas,"Courier New",monospace;
     font-size:13px;
+    transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;
 }
+.form-row input:hover,.form-row select:hover{border-color:#2a3b4d;}
+.form-row input:focus,.form-row select:focus,textarea:focus{
+    outline:none;border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(76,194,255,.14);
+    background:#0b131b;
+}
+input::placeholder{color:#5d6f83;}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#7f93a8 50%),linear-gradient(135deg,#7f93a8 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:32px;}
 textarea{resize:vertical;min-height:120px;}
 .result-card{
-    background:#14202b;
-    border:1px solid #2b4866;
-    border-radius:6px;
-    padding:12px;
+    background:linear-gradient(180deg,rgba(76,194,255,.05),rgba(76,194,255,.015));
+    border:1px solid #1d3346;
+    border-radius:11px;
+    padding:14px 15px;
     white-space:pre-wrap;
-    color:#cde8ff;
+    color:#cfe8ff;
+    font-family:ui-monospace,Consolas,"Courier New",monospace;
     font-size:12.5px;
+    line-height:1.62;
+    min-height:320px;
+    max-height:62vh;
+    overflow-y:auto;
+    overflow-x:auto;
+    scrollbar-width:thin;
+    scrollbar-color:#2a3b4d transparent;
 }
-small{color:#aaa;font-size:11px;}
+.result-card::-webkit-scrollbar{width:9px;height:9px;}
+.result-card::-webkit-scrollbar-thumb{background:#26384a;border-radius:999px;border:2px solid transparent;background-clip:padding-box;}
+.result-card::-webkit-scrollbar-track{background:transparent;}
+small{color:var(--muted);font-size:11.5px;}
 .hidden{display:none !important;}
-.two-col{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
+.two-col{display:grid;grid-template-columns:1.05fr .95fr;gap:16px;align-items:start;}
+@media(max-width:820px){.two-col{grid-template-columns:1fr;}}
+.info-text{color:var(--muted);margin:8px 0;font-size:12px;line-height:1.6;}
+.status-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+.badge{
+    display:inline-flex;align-items:center;gap:7px;
+    background:#16232f;border:1px solid #2b4058;
+    border-radius:999px;padding:6px 13px;font-size:11.5px;color:#93a8bd;
 }
-@media(max-width:640px){
-    .two-col{grid-template-columns:1fr;}
+.badge b{color:#8fe3ff;font-weight:600;letter-spacing:.02em;}
+.badge.rom-on{border-color:rgba(46,204,113,.55);color:#9df0bf;background:rgba(46,204,113,.10);}
+.badge.rom-on b{color:#b6ffd4;}
+.file-drop{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+    padding:20px 16px;
+    border:1px dashed #2b4058;border-radius:12px;
+    background:rgba(76,194,255,.035);
+    cursor:pointer;
+    transition:border-color .16s ease,background .16s ease,transform .12s ease;
 }
-.info-text{color:#bbbbbb;margin:6px 0;font-size:12px;}
+.file-drop:hover{border-color:var(--accent);background:rgba(76,194,255,.075);transform:translateY(-1px);}
+.file-drop-title{font-size:13px;color:#cfe8ff;font-weight:550;}
+.file-drop-hint{font-size:11.5px;color:var(--muted);}
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line-soft);}
+.modal-overlay{
+    position:fixed;inset:0;z-index:100;
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+    background:rgba(4,8,12,.66);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+    animation:fade .16s ease;
+}
+.modal-card{
+    width:min(520px,100%);
+    background:linear-gradient(180deg,rgba(255,255,255,.04),transparent),#101a24;
+    border:1px solid #24405a;
+    border-radius:16px;
+    padding:22px;
+    box-shadow:0 24px 60px rgba(0,0,0,.5);
+    animation:rise .18s ease;
+}
+.modal-card h2{color:var(--accent);font-size:15px;margin-bottom:10px;}
+.modal-card .info-text{margin:0 0 14px;}
+.modal-card code{background:#0b131b;border:1px solid var(--line-soft);border-radius:6px;padding:1px 6px;font-size:12px;color:#9fe0ff;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes rise{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div class="container">
-    <h1>璀璨17基岩版珍珠炮计算器</h1>
+    <header>
+        <h1>璀璨17｜基岩版珍珠炮计算器</h1>
+        <div class="subtitle">TNT 阵列弹道仿真 · 落点反推 · 拦截求解</div>
+    </header>
     <!-- 模式选择 -->
     <div class="panel">
-        <h2>计算模式选择</h2>
+        <h2>计算模式</h2>
         <div class="mode-bar">
-            <button onclick="switchMode('A')">A 落点反推TNT</button>
-            <button onclick="switchMode('B')">B TNT正向算落点</button>
-            <button onclick="switchMode('C')">C 自定义火控架构</button>
-            <button onclick="switchMode('F')">F 指定配置+轨迹查询</button>
-            <button onclick="switchMode('G')">G 拦截求解</button>
-            <button onclick="openPhysicsPanel()">物理参数</button>
-            <button onclick="openHelpPanel()">使用帮助</button>
+            <button id="modeBtnA" class="mode" onclick="switchMode('A')">A 落点反推TNT</button>
+            <button id="modeBtnB" class="mode" onclick="switchMode('B')">B TNT正向算落点</button>
+            <button id="modeBtnF" class="mode" onclick="switchMode('F')">F 指定配置+轨迹查询</button>
+            <button id="modeBtnG" class="mode" onclick="switchMode('G')">G 拦截求解</button>
+            <button id="romToggle" class="mode" onclick="toggleRomMode()">ROM模式</button>
+            <button class="secondary" onclick="openPhysicsPanel()">物理参数</button>
+            <button class="secondary" onclick="openHelpPanel()">使用帮助</button>
             <button class="danger" onclick="guiResetAll()">全部重置</button>
         </div>
-        <div class="info-text">当前模式：<span id="currentModeText">未选择</span>｜配置状态：<span id="guiConfigStatus">无</span></div>
+        <div class="status-row">
+            <span class="badge">当前模式 <b id="currentModeText">未选择</b></span>
+            <span class="badge">配置 <b id="guiConfigStatus">无</b></span>
+            <span class="badge" id="romBadge">ROM <b id="romStatus">关</b></span>
+        </div>
     </div>
     <div class="two-col">
         <!-- 输入表单区 -->
@@ -126,44 +240,22 @@ small{color:#aaa;font-size:11px;}
             <!-- A模式 -->
             <div id="panelA" class="panel hidden">
                 <h2>A模式：已知落点反推TNT</h2>
-                <div class="form-row">
-                    <label>珍珠X</label><input id="a_pe_x" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>珍珠Y</label><input id="a_pe_y" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>珍珠Z</label><input id="a_pe_z" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>目标X</label><input id="a_t_x" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>目标Y</label><input id="a_t_y" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>目标Z</label><input id="a_t_z" type="number" step="any">
-                </div>
+                <div class="form-row"><label>珍珠X</label><input id="a_pe_x" type="number" step="any"></div>
+                <div class="form-row"><label>珍珠Y</label><input id="a_pe_y" type="number" step="any"></div>
+                <div class="form-row"><label>珍珠Z</label><input id="a_pe_z" type="number" step="any"></div>
+                <div class="form-row"><label>目标X</label><input id="a_t_x" type="number" step="any"></div>
+                <div class="form-row"><label>目标Y</label><input id="a_t_y" type="number" step="any"></div>
+                <div class="form-row"><label>目标Z</label><input id="a_t_z" type="number" step="any"></div>
                 <div class="mode-bar"><button onclick="runModeA()">开始计算A</button></div>
             </div>
             <!-- B模式 -->
             <div id="panelB" class="panel hidden">
                 <h2>B模式：给定TNT算落点</h2>
-                <div class="form-row">
-                    <label>珍珠X</label><input id="b_pe_x" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>珍珠Y</label><input id="b_pe_y" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>珍珠Z</label><input id="b_pe_z" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>左阵列TNT(nL)</label><input id="b_nl" type="number">
-                </div>
-                <div class="form-row">
-                    <label>右阵列TNT(nR)</label><input id="b_nr" type="number">
-                </div>
+                <div class="form-row"><label>珍珠X</label><input id="b_pe_x" type="number" step="any"></div>
+                <div class="form-row"><label>珍珠Y</label><input id="b_pe_y" type="number" step="any"></div>
+                <div class="form-row"><label>珍珠Z</label><input id="b_pe_z" type="number" step="any"></div>
+                <div class="form-row"><label>左阵列TNT(nL)</label><input id="b_nl" type="number"></div>
+                <div class="form-row"><label>右阵列TNT(nR)</label><input id="b_nr" type="number"></div>
                 <div class="form-row">
                     <label>打角方向</label>
                     <select id="b_dir">
@@ -173,55 +265,17 @@ small{color:#aaa;font-size:11px;}
                         <option value="z-">z-</option>
                     </select>
                 </div>
-                <div class="form-row">
-                    <label>落地Y高度</label><input id="b_y_land" type="number" step="any">
-                </div>
+                <div class="form-row"><label>落地Y高度</label><input id="b_y_land" type="number" step="any"></div>
                 <div class="mode-bar"><button onclick="runModeB()">开始计算B</button></div>
-            </div>
-            <!-- C模式 -->
-            <div id="panelC" class="panel hidden">
-                <h2>C模式：自定义火控架构</h2>
-                <div class="form-row">
-                    <label>珍珠X</label><input id="c_pe_x" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>珍珠Y</label><input id="c_pe_y" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>珍珠Z</label><input id="c_pe_z" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>目标X</label><input id="c_t_x" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>目标Y</label><input id="c_t_y" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>目标Z</label><input id="c_t_z" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>火控架构数组</label><input id="c_arch" placeholder="空格分隔，例 2 4 8">
-                </div>
-                <div class="mode-bar"><button onclick="runModeC()">开始计算C</button></div>
             </div>
             <!-- F模式 -->
             <div id="panelF" class="panel hidden">
                 <h2>F模式：指定配置+轨迹查询</h2>
-                <div class="form-row">
-                    <label>珍珠X</label><input id="f_pe_x" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>珍珠Y</label><input id="f_pe_y" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>珍珠Z</label><input id="f_pe_z" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>左阵列TNT(nL)</label><input id="f_nl" type="number">
-                </div>
-                <div class="form-row">
-                    <label>右阵列TNT(nR)</label><input id="f_nr" type="number">
-                </div>
+                <div class="form-row"><label>珍珠X</label><input id="f_pe_x" type="number" step="any"></div>
+                <div class="form-row"><label>珍珠Y</label><input id="f_pe_y" type="number" step="any"></div>
+                <div class="form-row"><label>珍珠Z</label><input id="f_pe_z" type="number" step="any"></div>
+                <div class="form-row"><label>左阵列TNT(nL)</label><input id="f_nl" type="number"></div>
+                <div class="form-row"><label>右阵列TNT(nR)</label><input id="f_nr" type="number"></div>
                 <div class="form-row">
                     <label>打角方向</label>
                     <select id="f_dir">
@@ -231,14 +285,12 @@ small{color:#aaa;font-size:11px;}
                         <option value="z-">z-</option>
                     </select>
                 </div>
-                <div class="form-row">
-                    <label>落地Y高度</label><input id="f_y_land" type="number" step="any">
-                </div>
+                <div class="form-row"><label>落地Y高度</label><input id="f_y_land" type="number" step="any"></div>
                 <div class="info-text">先计算弹道，之后可查询tick坐标</div>
                 <div class="mode-bar">
                     <button onclick="runModeF_calc()">1.计算弹道</button>
                 </div>
-                <hr style="margin:10px 0;border-color:#333">
+                <hr class="sep">
                 <div class="form-row">
                     <label>游戏刻查询</label><input id="f_tick_query" placeholder="单个tick或 10_50">
                 </div>
@@ -250,21 +302,13 @@ small{color:#aaa;font-size:11px;}
             <div id="panelG" class="panel hidden">
                 <h2>G模式：拦截求解</h2>
                 <div class="info-text">珍珠Y使用物理参数【珍珠默认Y坐标】</div>
-                <div class="form-row">
-                    <label>珍珠X</label><input id="g_pe_x" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>珍珠Z</label><input id="g_pe_z" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>拦截目标X</label><input id="g_ix" type="number" step="any">
-                </div>
-                <div class="form-row">
-                    <label>拦截目标Z</label><input id="g_iz" type="number" step="any">
-                </div>
+                <div class="form-row"><label>珍珠X</label><input id="g_pe_x" type="number" step="any"></div>
+                <div class="form-row"><label>珍珠Z</label><input id="g_pe_z" type="number" step="any"></div>
+                <div class="form-row"><label>拦截目标X</label><input id="g_ix" type="number" step="any"></div>
+                <div class="form-row"><label>拦截目标Z</label><input id="g_iz" type="number" step="any"></div>
                 <div class="mode-bar"><button onclick="runModeG()">开始计算G拦截</button></div>
             </div>
-            <!-- 物理参数弹窗面板【全部改为中文标签】 -->
+            <!-- 物理参数面板 -->
             <div id="panelPhys" class="panel hidden">
                 <h2>物理参数设置</h2>
                 <small>修改会保存到浏览器本地存储</small>
@@ -276,11 +320,12 @@ small{color:#aaa;font-size:11px;}
                 <div class="form-row"><label>阵列单路TNT上限(MAX_SINGLE_ARRAY)</label><input id="p_MAX_SINGLE_ARRAY" type="number"></div>
                 <div class="form-row"><label>坐标轴判定精度(AXIS_EPS)</label><input id="p_AXIS_EPS" type="number" step="any"></div>
                 <div class="form-row"><label>位置误差阈值(ERR_POS_EPS)</label><input id="p_ERR_POS_EPS" type="number" step="any"></div>
-                <div class="form-row"><label>虚拟珍珠面高(FIX_PEARL_Y)</label><input id="p_FIX_PEARL_Y" type="number" step="any"></div>
+                <div class="form-row"><label>珍珠默认Y坐标(FIX_PEARL_Y)</label><input id="p_FIX_PEARL_Y" type="number" step="any"></div>
                 <div class="form-row"><label>拦截允许最大下落格数(MAX_DROP)</label><input id="p_MAX_DROP" type="number" step="any"></div>
+                <div class="form-row"><label>二分次数(BISECT_TIMES)</label><input id="p_BISECT_TIMES" type="number" step="any"></div>
                 <div class="mode-bar">
                     <button onclick="readPhysToGui()">读取当前参数</button>
-                    <button onclick="savePhysFromGui()">保存参数</button>
+                    <button class="primary" onclick="savePhysFromGui()">保存参数</button>
                     <button class="secondary" onclick="resetPhysDefault()">恢复默认物理</button>
                     <button class="secondary" onclick="closePhysicsPanel()">关闭</button>
                 </div>
@@ -288,14 +333,16 @@ small{color:#aaa;font-size:11px;}
             <!-- 帮助面板 -->
             <div id="panelHelp" class="panel hidden">
                 <h2>使用帮助</h2>
-                <div class="result-card" style="max-height:340px;overflow-y:auto;">
-A模式｜已知落点坐标，反推左右阵列TNT颗数，自动判定发射方向。
+                <div class="result-card" style="min-height:0;max-height:340px;">
+A模式｜已知落点坐标，反推左右阵列TNT颗数。当目标Y高于珍珠Y时，自动计算抛射所需Y轴动量；当目标Y与珍珠Y相等时，自动切入G模式接管。
 B模式｜输入珍珠坐标+左右TNT数量+方向，正向算出珍珠落点。
-C模式｜自定义火控架构集合，输出ROM可直接使用的TNT表达式。
 F模式｜给定全套配置，计算飞行弹道；支持查询任意tick时刻珍珠空间坐标。
-G模式｜拦截求解，珍珠Y使用物理参数【珍珠默认Y坐标】；约束下落≤拦截允许最大下落格数。
+G模式｜拦截求解，珍珠Y使用物理参数【珍珠默认Y坐标】；约束下落≤拦截允许最大下落格数，并寻找最少TNT用量。
+【ROM模式】
+点击「ROM模式」按钮开启（按钮变绿），再点一次关闭。开启后 A / G 模式只在火控架构能够组合出的TNT数量里寻解，并给出可直接使用的阵列表达式。
+若已加载JSON配置文件，直接采用其中的 arch；若未加载，会弹窗让你输入火控架构，保存后生效；在弹窗点「取消」则ROM模式自动关闭。
 【JSON配置文件】
-格式示例：
+上传后会自动填入各模式表单。格式示例：
 {
   "pearlX":100,
   "pearlY":64,
@@ -303,16 +350,18 @@ G模式｜拦截求解，珍珠Y使用物理参数【珍珠默认Y坐标】；�
   "arch":[2,4,8,16]
 }
 适用：基岩版1.16.210+，鎏龍霄飓原版开源。
-联系作者 beisong2025@outlook.com 官方QQ群1104379318
                 </div>
                 <div class="mode-bar"><button class="secondary" onclick="closeHelpPanel()">关闭帮助</button></div>
             </div>
             <!-- H模式 文件上传 -->
             <div class="panel">
                 <h2>H模式｜加载JSON配置文件</h2>
-                <input type="file" id="guiFileInput" accept=".json">
-                <div class="mode-bar" style="margin-top:8px;">
-                    <button onclick="document.getElementById('guiFileInput').click()">选择JSON文件</button>
+                <input type="file" id="guiFileInput" class="visually-hidden" accept=".json,application/json,text/plain,application/octet-stream">
+                <div class="file-drop" onclick="openFileChooser()">
+                    <span class="file-drop-title">选择 JSON 配置文件</span>
+                    <span class="file-drop-hint">需包含 pearlX / pearlY / pearlZ / arch，上传后自动填入表单</span>
+                </div>
+                <div class="mode-bar" style="margin-top:12px;">
                     <button class="secondary" onclick="fillFormFromConfig()">把配置填入表单</button>
                 </div>
                 <div class="info-text" id="fileLoadHint">未加载文件</div>
@@ -320,18 +369,46 @@ G模式｜拦截求解，珍珠Y使用物理参数【珍珠默认Y坐标】；�
         </div>
         <!-- 结果输出区 -->
         <div>
-            <div class="panel" style="min-height:320px;">
+            <div class="panel">
                 <h2>计算输出结果</h2>
                 <div id="outBox" class="result-card">等待执行计算...</div>
-                <div class="mode-bar" style="margin-top:10px;">
+                <div class="mode-bar" style="margin-top:12px;">
                     <button class="secondary" onclick="clearOutput()">清空输出</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<!-- ROM 火控架构输入弹窗 -->
+<div id="romModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="romModalTitle">
+    <div class="modal-card">
+        <h2 id="romModalTitle">ROM 火控架构</h2>
+        <p class="info-text">
+            输入火控架构档位（空格分隔），例如 <code>2 4 8 16</code>。<br>
+            保存后 A / G 模式只在该架构能组合出的 TNT 数量里寻解。
+        </p>
+        <div class="form-row">
+            <label>火控架构数组</label>
+            <input id="romArchInput" placeholder="2 4 8 16" autocomplete="off">
+        </div>
+        <div class="modal-actions">
+            <button class="primary" onclick="saveRomArch()">保存</button>
+            <button class="secondary" onclick="cancelRomArch()">取消</button>
+        </div>
+    </div>
+</div>
 <script>
-// ============【璀璨17原版完整核心计算库，完全原样复制，无任何修改】============
+// ============【璀璨17核心计算库】============
+/* ============================================================
+ * 璀璨17 图形版 —— 维护记录
+ * v22  2026-10-23  上一任收尾版：A 模式统一寻优（平射改为真实正向仿真穷举）
+ * v23  2026-10-23  接手修复：45° 单侧解 / find_land_time 高差判定
+ * v24  2026-10-23  按要求回归原计算逻辑（仅 G 模式求最少 TNT；A 模式抛射不优化当量）：
+ *                  1) 移除 MAX_V0Y 与"省料/精度"权衡表，A 模式输出恢复原样
+ *                  2) C 模式改为「ROM模式」开关：开启后 A / G 在火控架构内寻解
+ *                  3) 上传配置自动填表；保存物理参数后自动回读
+ *                  4) 界面现代化（外观重做，操作逻辑不变）
+ * ============================================================ */
 const DEFAULT_PHYS = {
     G: 0.025,
     R: 8.0,
@@ -343,7 +420,8 @@ const DEFAULT_PHYS = {
     AXIS_EPS: 1e-4,
     ERR_POS_EPS: 0.01,
     FIX_PEARL_Y: 64.0,
-    MAX_DROP: 1.0
+    MAX_DROP: 1.0,
+    BISECT_TIMES: 120
 };
 let phys = JSON.parse(JSON.stringify(DEFAULT_PHYS));
 const ERR_MSG = {
@@ -359,43 +437,32 @@ const ERR_MSG = {
     json_parse_err: "JSON解析失败，请检查配置文件格式",
     json_missing: "配置文件缺少珍珠坐标或火控架构字段",
 };
-function auto_tnt_y(pe_y) {
-    return pe_y + phys.EYE;
-}
-function S(t) {
-    return t;
-}
-function T(t) {
-    return t * (t - 1.0) / 2.0;
-}
+function auto_tnt_y(pe_y) { return pe_y + phys.EYE; }
+function S(t) { return t; }
+function T(t) { return t * (t - 1.0) / 2.0; }
 function calc_thrust(pearl_pos, tnt_pos) {
     const [px, py, pz] = pearl_pos;
     const [tx, ty, tz] = tnt_pos;
     const eye_y = py + phys.EYE;
-    const dx = tx - px;
-    const dy = ty - eye_y;
-    const dz = tz - pz;
+    const dx = tx - px, dy = ty - eye_y, dz = tz - pz;
     const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
     if (dist >= phys.R) return [0.0, 0.0, 0.0];
     const mag = (1.0 - dist / phys.R) * phys.SINGLE_MAX;
-    const dir_x = px - tx;
-    const dir_y = eye_y - ty;
-    const dir_z = pz - tz;
+    const dir_x = px - tx, dir_y = eye_y - ty, dir_z = pz - tz;
     const dir_dist = Math.sqrt(dir_x*dir_x + dir_y*dir_y + dir_z*dir_z);
     if (dir_dist < 1e-12) return [0.0, 0.0, 0.0];
     return [mag * dir_x / dir_dist, mag * dir_y / dir_dist, mag * dir_z / dir_dist];
 }
 function get_pos(p0, v0, t) {
-    const st = S(t);
-    const tt = T(t);
-    return [
-        p0[0] + v0[0] * st,
-        p0[1] + v0[1] * st - phys.G * tt,
-        p0[2] + v0[2] * st
-    ];
+    const st = S(t), tt = T(t);
+    return [p0[0] + v0[0] * st, p0[1] + v0[1] * st - phys.G * tt, p0[2] + v0[2] * st];
 }
 function find_land_time(p0, v0, y_target) {
-    if (p0[1] <= y_target && v0[1] <= 0) return 0.0;
+    // 起点已在目标高度且不再上升：同一高度 -> 立刻落地(t=0)；低于目标且向下运动 -> 永远到不了目标(无解)。
+    // 旧版在这里一律返回 0.0，导致 B 模式落地Y高于珍珠Y时静默输出"距离=0"的假结果。
+    if (p0[1] <= y_target && v0[1] <= 0) {
+        return Math.abs(p0[1] - y_target) < 1e-9 ? 0.0 : null;
+    }
     let t_high = 1.0;
     for (let i = 0; i < 50; i++) {
         if (get_pos(p0, v0, t_high)[1] <= y_target) break;
@@ -404,13 +471,10 @@ function find_land_time(p0, v0, y_target) {
     }
     if (t_high > phys.MAX_TICK) return null;
     let t_low = 0.0;
-    for (let i = 0; i < 120; i++) {
+    for (let i = 0; i < phys.BISECT_TIMES; i++) {
         const t_mid = (t_low + t_high) / 2;
-        if (get_pos(p0, v0, t_mid)[1] > y_target) {
-            t_low = t_mid;
-        } else {
-            t_high = t_mid;
-        }
+        if (get_pos(p0, v0, t_mid)[1] > y_target) t_low = t_mid;
+        else t_high = t_mid;
     }
     return (t_low + t_high) / 2;
 }
@@ -429,25 +493,17 @@ function angle_state(pearl_pos, tnt_L, tnt_R, nL, nR) {
     let main, side;
     if (Math.abs(dx) >= Math.abs(dz)) {
         main = dx > 0 ? "x-" : "x+";
-        if (diff < 0.5) {
-            side = "无侧向偏移";
-        } else {
-            if (tlz > trz) {
-                side = nL < nR ? `向+Z偏转，左侧少${diff}颗` : `向-Z偏转，右侧少${diff}颗`;
-            } else {
-                side = nL < nR ? `向-Z偏转，左侧少${diff}颗` : `向+Z偏转，右侧少${diff}颗`;
-            }
+        if (diff < 0.5) side = "无侧向偏移";
+        else {
+            if (tlz > trz) side = nL < nR ? `向+Z偏转，左侧少${diff}颗` : `向-Z偏转，右侧少${diff}颗`;
+            else side = nL < nR ? `向-Z偏转，左侧少${diff}颗` : `向+Z偏转，右侧少${diff}颗`;
         }
     } else {
         main = dz > 0 ? "z-" : "z+";
-        if (diff < 0.5) {
-            side = "无侧向偏移";
-        } else {
-            if (tlx > trx) {
-                side = nL < nR ? `向+X偏转，左侧少${diff}颗` : `向-X偏转，右侧少${diff}颗`;
-            } else {
-                side = nL < nR ? `向-X偏转，左侧少${diff}颗` : `向+X偏转，右侧少${diff}颗`;
-            }
+        if (diff < 0.5) side = "无侧向偏移";
+        else {
+            if (tlx > trx) side = nL < nR ? `向+X偏转，左侧少${diff}颗` : `向-X偏转，右侧少${diff}颗`;
+            else side = nL < nR ? `向-X偏转，左侧少${diff}颗` : `向+X偏转，右侧少${diff}颗`;
         }
     }
     return `主方向${main}，${side}`;
@@ -455,35 +511,18 @@ function angle_state(pearl_pos, tnt_L, tnt_R, nL, nR) {
 function auto_dir(target, pearl) {
     const dx = target[0] - pearl[0];
     const dz = target[2] - pearl[2];
-    if (Math.abs(dx) >= Math.abs(dz)) {
-        return dx > 0 ? "x+" : "x-";
-    } else {
-        return dz > 0 ? "z+" : "z-";
-    }
+    if (Math.abs(dx) >= Math.abs(dz)) return dx > 0 ? "x+" : "x-";
+    else return dz > 0 ? "z+" : "z-";
 }
 function get_tnt_pair(pearl, tnt_y, direct) {
     const [px, py, pz] = pearl;
     let tl, tr;
     switch(direct) {
-        case "x+":
-            tl = [px - 0.5, tnt_y, pz + 0.5];
-            tr = [px - 0.5, tnt_y, pz - 0.5];
-            break;
-        case "x-":
-            tl = [px + 0.5, tnt_y, pz + 0.5];
-            tr = [px + 0.5, tnt_y, pz - 0.5];
-            break;
-        case "z+":
-            tl = [px + 0.5, tnt_y, pz - 0.5];
-            tr = [px - 0.5, tnt_y, pz - 0.5];
-            break;
-        case "z-":
-            tl = [px + 0.5, tnt_y, pz + 0.5];
-            tr = [px - 0.5, tnt_y, pz + 0.5];
-            break;
-        default:
-            tl = [px - 0.5, tnt_y, pz + 0.5];
-            tr = [px - 0.5, tnt_y, pz - 0.5];
+        case "x+": tl = [px - 0.5, tnt_y, pz + 0.5]; tr = [px - 0.5, tnt_y, pz - 0.5]; break;
+        case "x-": tl = [px + 0.5, tnt_y, pz + 0.5]; tr = [px + 0.5, tnt_y, pz - 0.5]; break;
+        case "z+": tl = [px + 0.5, tnt_y, pz - 0.5]; tr = [px - 0.5, tnt_y, pz - 0.5]; break;
+        case "z-": tl = [px + 0.5, tnt_y, pz + 0.5]; tr = [px - 0.5, tnt_y, pz + 0.5]; break;
+        default:   tl = [px - 0.5, tnt_y, pz + 0.5]; tr = [px - 0.5, tnt_y, pz - 0.5];
     }
     return [tl, tr];
 }
@@ -491,22 +530,15 @@ function solve_B(nL, nR, pearl, tntL, tntR, y_land) {
     if (nL < 0 || nR < 0) return [null, "tnt_negative"];
     const vL = calc_thrust(pearl, tntL);
     const vR = calc_thrust(pearl, tntR);
-    if ((vL[0] === 0 && vL[1] === 0 && vL[2] === 0) && (vR[0] === 0 && vR[1] === 0 && vR[2] === 0)) {
-        return [null, "tnt_out_of_range"];
-    }
-    const v0x = nL * vL[0] + nR * vR[0];
-    const v0y = nL * vL[1] + nR * vR[1];
-    const v0z = nL * vL[2] + nR * vR[2];
-    const v0 = [v0x, v0y, v0z];
+    if ((vL[0] === 0 && vL[1] === 0 && vL[2] === 0) && (vR[0] === 0 && vR[1] === 0 && vR[2] === 0)) return [null, "tnt_out_of_range"];
+    const v0 = [nL * vL[0] + nR * vR[0], nL * vL[1] + nR * vR[1], nL * vL[2] + nR * vR[2]];
     const t_land = find_land_time(pearl, v0, y_land);
     if (t_land === null) return [null, "no_landing"];
     const pos = get_pos(pearl, v0, t_land);
-    const dx = Math.abs(pos[0] - pearl[0]);
-    const dy = Math.abs(pos[1] - pearl[1]);
-    const dz = Math.abs(pos[2] - pearl[2]);
     return [{
         v0: v0, t_land: t_land, land_pos: pos,
-        delta_abs: [dx, dy, dz], y_state: y_motion_state(v0y),
+        delta_abs: [Math.abs(pos[0] - pearl[0]), Math.abs(pos[1] - pearl[1]), Math.abs(pos[2] - pearl[2])],
+        y_state: y_motion_state(v0[1]),
         angle: angle_state(pearl, tntL, tntR, nL, nR)
     }, null];
 }
@@ -514,113 +546,181 @@ function solve_float_opt(target, pearl, tntL, tntR) {
     const [tx, ty, tz] = target;
     const vL = calc_thrust(pearl, tntL);
     const vR = calc_thrust(pearl, tntR);
-    if ((vL[0] === 0 && vL[1] === 0 && vL[2] === 0) || (vR[0] === 0 && vR[1] === 0 && vR[2] === 0)) {
-        return [null, null, null];
-    }
-    const dx = tx - pearl[0];
-    const dz = tz - pearl[2];
+    if ((vL[0] === 0 && vL[1] === 0 && vL[2] === 0) || (vR[0] === 0 && vR[1] === 0 && vR[2] === 0)) return [null, null, null];
+    const dx = tx - pearl[0], dz = tz - pearl[2];
     const dist_h = Math.sqrt(dx*dx + dz*dz);
     if (dist_h < 0.01) return [0, 0, 0];
     let t_est = Math.max(10, Math.min(5000, dist_h / 0.4));
     let nLf = 0.0, nRf = 0.0;
     for (let i = 0; i < 8; i++) {
         const st = S(t_est);
-        const vx_req = dx / st;
-        const vz_req = dz / st;
-        const a = vL[0], b = vR[0];
-        const c = vL[2], d = vR[2];
+        const vx_req = dx / st, vz_req = dz / st;
+        const a = vL[0], b = vR[0], c = vL[2], d = vR[2];
         const det = a * d - b * c;
         if (Math.abs(det) < 1e-12) {
             const total_v = Math.sqrt(vx_req**2 + vz_req**2);
             const pv = Math.sqrt(vL[0]**2 + vL[2]**2);
             const tn = pv ? total_v / pv : 0;
-            nLf = tn / 2;
-            nRf = tn / 2;
+            nLf = tn / 2; nRf = tn / 2;
         } else {
-            const dl = vx_req * d - vz_req * b;
-            const dr = a * vz_req - c * vx_req;
-            nLf = dl / det;
-            nRf = dr / det;
+            nLf = (vx_req * d - vz_req * b) / det;
+            nRf = (a * vz_req - c * vx_req) / det;
         }
-        nLf = Math.max(0, nLf);
-        nRf = Math.max(0, nRf);
+        nLf = Math.max(0, nLf); nRf = Math.max(0, nRf);
         const vt = [nLf*vL[0]+nRf*vR[0], nLf*vL[1]+nRf*vR[1], nLf*vL[2]+nRf*vR[2]];
         const tr = find_land_time(pearl, vt, ty);
-        if (tr === null) {
-            t_est *= 1.3;
-            continue;
-        }
+        if (tr === null) { t_est *= 1.3; continue; }
         if (Math.abs(tr - t_est)/t_est < 0.01) break;
         t_est = tr;
     }
     return [nLf, nRf, t_est];
 }
+
+/* ============================================================
+ * 全新重写的 A 模式统一寻优算法
+ * 直接基于解析比例约束进行全局网格搜索。
+ * 突破了原版浮点迭代在长距离下堕时的局部死区（解决 4 格误差问题）
+ * ============================================================ */
 function solve_A(target, pearl, tntL, tntR) {
     const [tx, ty, tz] = target;
+    const [px, py, pz] = pearl;
+    
     const vL = calc_thrust(pearl, tntL);
     const vR = calc_thrust(pearl, tntR);
     if ((vL[0]===0&&vL[1]===0&&vL[2]===0)||(vR[0]===0&&vR[1]===0&&vR[2]===0)) return [null, "tnt_out_of_range"];
-    const dx = tx - pearl[0];
-    const dz = tz - pearl[2];
+    
+    const dx = tx - px, dz = tz - pz;
     const dist_h = Math.sqrt(dx*dx + dz*dz);
     if (dist_h < 0.01) return [null, "target_too_close"];
-    const [nLf, nRf, t_est] = solve_float_opt(target, pearl, tntL, tntR);
-    if (nLf === null) return [null, "tnt_out_of_range"];
-    const nL0 = Math.round(nLf);
-    const nR0 = Math.round(nRf);
-    const sL = Math.max(0, nL0 - phys.SEARCH_RANGE);
-    const eL = nL0 + phys.SEARCH_RANGE;
-    const sR = Math.max(0, nR0 - phys.SEARCH_RANGE);
-    const eR = nR0 + phys.SEARCH_RANGE;
+    
+    const a = vL[0], c = vL[2];
+    const b = vR[0], d = vR[2];
+    
+    // 约束水平方向的推力比例：解 nL*K1 + nR*K2 = 0，保证合成速度矢量指向目标。
+    // 注意 45° 等奇异方向会出现 K2=0 或 K1=0，此时正确解是【单侧阵列】（nL=0 / nR=0）。
+    // 旧版用 K1*K2<0 判断、否则 0.5 兜底，会让 45° 目标静默返回数千米误差的错误解。
+    const K1 = a * dz - c * dx;
+    const K2 = b * dz - d * dx;
+    const K_EPS = 1e-9;
+    let ratio = 0.5;
+    if (Math.abs(K1) < K_EPS && Math.abs(K2) < K_EPS) {
+        ratio = 0.5;                        // 轴向射击：任何比例都指向目标
+    } else if (Math.abs(K2) < K_EPS) {
+        ratio = 0;                          // 只有左侧会偏航 -> 全部用右侧阵列
+    } else if (Math.abs(K1) < K_EPS) {
+        ratio = 1;                          // 只有右侧会偏航 -> 全部用左侧阵列
+    } else {
+        const R = -K2 / K1;
+        if (R < 0) return [null, "no_solution"];   // 两个推力方向无法合成指向目标
+        ratio = R / (1 + R);
+    }
+    
+    // 获取原版浮点解作为搜索中心参考
+    const [nLf, nRf] = solve_float_opt(target, pearl, tntL, tntR);
+    const baseTotal = (nLf !== null) ? Math.round(nLf + nRf) : 100;
+
+    /* 说明：只有 G 模式追求"最少 TNT"。A 模式保持原有策略——
+     * 抛射分支按 v0y 反解、平射分支按真实落点误差取最优，不做当量最优。
+     */
+    let minSearch = 2;
+    let maxSearch = phys.MAX_SINGLE_ARRAY;
+
+    if (ty > py + 0.01) {
+        // 抛射模式：搜索空间大，限制最大可用TNT防止卡顿
+        maxSearch = 20000;
+    } else {
+        // 平射模式：原版因为下坠发散，中心点偏小。我们在它上下放宽搜索，找到真实补偿重力的解
+        minSearch = Math.max(2, baseTotal - 150);
+        maxSearch = Math.min(phys.MAX_SINGLE_ARRAY, baseTotal + 300);
+    }
+
+    let top5 = [];
     let best_err = Infinity;
     let best = null;
     let bnL = 0, bnR = 0;
-    let top5 = [];
-    for(let nL = sL; nL <= eL; nL++){
-        for(let nR = sR; nR <= eR; nR++){
-            if(nL===0 && nR===0) continue;
-            const [res] = solve_B(nL,nR,pearl,tntL,tntR,ty);
-            if(!res) continue;
-            const err_h = Math.sqrt((res.land_pos[0]-tx)**2 + (res.land_pos[2]-tz)**2);
-            top5.push([err_h,nL,nR]);
-            top5.sort((a,b)=>a[0]-b[0]);
-            top5 = top5.slice(0,5);
-            if(err_h < best_err){
-                best_err = err_h;
-                best = res;
-                bnL = nL;
-                bnR = nR;
+
+    for (let totalS = minSearch; totalS <= maxSearch; totalS++) {
+        let base_nL = Math.round(totalS * ratio);
+        for (let offL = -2; offL <= 2; offL++) {
+            let nL = base_nL + offL;
+            let nR = totalS - nL;
+            if (nL < 0 || nR < 0) continue;
+
+            if (ty > py + 0.01) {
+                // 抛射模式下直接正向解算
+                const vx = nL * a + nR * b;
+                const vz = nL * c + nR * d;
+                const v_h = Math.hypot(vx, vz);
+                if (v_h < 1e-10 || vx * dx + vz * dz <= 0) continue;
+
+                const t = dist_h / v_h;
+                const v0y = (ty - py + phys.G * T(t)) / t;
+                if (v0y < 0) continue;
+
+                const pos_x = px + vx * t;
+                const pos_z = pz + vz * t;
+                const err_h = Math.hypot(pos_x - tx, pos_z - tz);
+
+                top5.push([err_h, nL, nR]);
+                top5.sort((a,b)=>a[0]-b[0]);
+                top5 = top5.slice(0, 5);
+
+                if (err_h < best_err) {
+                    best_err = err_h;
+                    bnL = nL;
+                    bnR = nR;
+                    best = {
+                        v0: [vx, v0y, vz], t_land: t, land_pos: [pos_x, ty, pos_z],
+                        y_state: "抛射（抛物线）", angle: angle_state(pearl, tntL, tntR, nL, nR),
+                        v0y: v0y, isProjectile: true
+                    };
+                }
+            } else {
+                // 平射模式下用真实的物理仿真计算落点
+                const [res] = solve_B(nL, nR, pearl, tntL, tntR, ty);
+                if (!res) continue;
+                const err_h = Math.sqrt((res.land_pos[0]-tx)**2 + (res.land_pos[2]-tz)**2);
+
+                top5.push([err_h, nL, nR]);
+                top5.sort((a,b)=>a[0]-b[0]);
+                top5 = top5.slice(0, 5);
+
+                if (err_h < best_err) {
+                    best_err = err_h;
+                    best = res;
+                    bnL = nL;
+                    bnR = nR;
+                }
             }
         }
+        // 提前退出条件：当误差已经小于 1e-5 且搜索过了足够多组时，跳出
+        if (best_err < 1e-5 && totalS > Math.max(minSearch, 10)) {
+            break;
+        }
     }
-    if(!best) return [null,"no_solution"];
+
+    if (!best) return [null, "no_solution"];
     best.nL = bnL;
     best.nR = bnR;
     best.error = best_err;
-    best.float_sol = [nLf,nRf];
+    best.float_sol = [nLf, nRf];
     best.top5 = top5;
-    return [best,null];
+    return [best, null];
 }
+
 function generate_arch_sum(arch) {
     let subsets = [[0, "0"]];
     for(const num of arch){
         const temp = [];
-        for(const [val,expr] of subsets){
-            const new_val = val + num;
-            const new_expr = val===0 ? `${num}` : `${expr}+${num}`;
-            temp.push([new_val, new_expr]);
-        }
+        for(const [val,expr] of subsets) temp.push([val+num, val===0?`${num}`:`${expr}+${num}`]);
         subsets = subsets.concat(temp);
     }
     const unique = {};
-    for(const [v,e] of subsets){
-        if(!(v in unique)) unique[v]=e;
-    }
+    for(const [v,e] of subsets) if(!(v in unique)) unique[v]=e;
     return Object.entries(unique).sort((a,b)=>Number(a[0])-Number(b[0]));
 }
 function binary_search_nearest(sorted_list, target) {
-    let left = 0;
-    let right = sorted_list.length;
+    let left = 0, right = sorted_list.length;
     while(left < right){
         const mid = Math.floor((left+right)/2);
         if(Number(sorted_list[mid][0]) < target) left = mid+1;
@@ -634,34 +734,20 @@ function solve_C_fast(target, pearl, tntL, tntR, arch) {
     const [tx, ty, tz] = target;
     const [nLf, nRf, t_opt] = solve_float_opt(target, pearl, tntL, tntR);
     if(nLf === null) return [null,"tnt_out_of_range"];
-    const left_pool = generate_arch_sum(arch);
-    const right_pool = generate_arch_sum(arch);
-    let best_err = Infinity;
-    let best_data = null;
-    let best_nl = 0, best_nr = 0;
-    let best_el = "", best_er = "";
-    const vLx = vL[0], vLz = vL[2];
-    const vRx = vR[0], vRz = vR[2];
+    const left_pool = generate_arch_sum(arch), right_pool = generate_arch_sum(arch);
+    let best_err = Infinity, best_data = null, best_nl = 0, best_nr = 0, best_el = "", best_er = "";
+    const vLx = vL[0], vLz = vL[2], vRx = vR[0], vRz = vR[2];
     const denom = vRx**2 + vRz**2;
-    const dx = tx - pearl[0];
-    const dz = tz - pearl[2];
+    const dx = tx - pearl[0], dz = tz - pearl[2];
     const st_opt = t_opt>0 ? S(t_opt):1;
-    const vx_need = dx / st_opt;
-    const vz_need = dz / st_opt;
-    const cross = vLx * vRx + vLz * vRz;
-    const req_dot = vx_need * vRx + vz_need * vRz;
+    const vx_need = dx / st_opt, vz_need = dz / st_opt;
+    const cross = vLx * vRx + vLz * vRz, req_dot = vx_need * vRx + vz_need * vRz;
     const near_k = 4;
     for(const [nl_val, el_str] of left_pool){
-        let nr_ideal;
-        if(denom < 1e-10){
-            nr_ideal = nRf;
-        }else{
-            nr_ideal = (req_dot - Number(nl_val)*cross)/denom;
-            nr_ideal = Math.max(0, nr_ideal);
-        }
+        let nr_ideal = denom < 1e-10 ? nRf : (req_dot - Number(nl_val)*cross)/denom;
+        nr_ideal = Math.max(0, nr_ideal);
         const pos = binary_search_nearest(right_pool, nr_ideal);
-        const start = Math.max(0, pos-near_k);
-        const end = Math.min(right_pool.length, pos+near_k+1);
+        const start = Math.max(0, pos-near_k), end = Math.min(right_pool.length, pos+near_k+1);
         for(let idx=start; idx<end; idx++){
             const [nr_val, er_str] = right_pool[idx];
             if(Number(nl_val)===0 && Number(nr_val)===0) continue;
@@ -669,165 +755,294 @@ function solve_C_fast(target, pearl, tntL, tntR, arch) {
             if(!res) continue;
             const err = Math.sqrt((res.land_pos[0]-tx)**2 + (res.land_pos[2]-tz)**2);
             if(err < best_err){
-                best_err = err;
-                best_data = res;
-                best_nl = Number(nl_val);
-                best_nr = Number(nr_val);
-                best_el = el_str;
-                best_er = er_str;
+                best_err = err; best_data = res; best_nl = Number(nl_val); best_nr = Number(nr_val); best_el = el_str; best_er = er_str;
             }
         }
     }
     if(!best_data) return [null,"no_solution"];
-    best_data.nL = best_nl;
-    best_data.nR = best_nr;
-    best_data.expr_L = best_el;
-    best_data.expr_R = best_er;
-    best_data.error = best_err;
+    best_data.nL = best_nl; best_data.nR = best_nr; best_data.expr_L = best_el; best_data.expr_R = best_er; best_data.error = best_err;
     return [best_data, null];
 }
-function get_drop_height(t) {
-    return phys.G * T(t);
-}
+function get_drop_height(t) { return phys.G * T(t); }
 function solve_t_for_target(vx, vz, dx_target, dz_target) {
     const eps = 1e-12;
     let candidates_t = [];
-    if(Math.abs(vx) > eps){
-        const tx = dx_target / vx;
-        if(tx>0) candidates_t.push(tx);
-    }
-    if(Math.abs(vz) > eps){
-        const tz = dz_target / vz;
-        if(tz>0) candidates_t.push(tz);
-    }
-    let valid_t = null;
+    if(Math.abs(vx) > eps) { const tx = dx_target / vx; if(tx>0) candidates_t.push(tx); }
+    if(Math.abs(vz) > eps) { const tz = dz_target / vz; if(tz>0) candidates_t.push(tz); }
     for(const t of candidates_t){
-        const pred_dx = vx * t;
-        const pred_dz = vz * t;
-        if(Math.hypot(pred_dx-dx_target, pred_dz-dz_target) < phys.ERR_POS_EPS){
-            valid_t = t;
-            break;
-        }
+        if(Math.hypot(vx * t - dx_target, vz * t - dz_target) < phys.ERR_POS_EPS) return t;
     }
-    return valid_t;
+    return null;
 }
-function solve_intercept(px, pz, ix, iz) {
-    const py = phys.FIX_PEARL_Y;
+
+/* ============================================================
+ * G 拦截模式核心算法 (优化版)
+ * ============================================================ */
+function solve_intercept(px, pz, ix, iz, pyOverride) {
+    const py = (pyOverride !== undefined && pyOverride !== null) ? pyOverride : phys.FIX_PEARL_Y;
     const pearl_xyz = [px, py, pz];
     const dX = ix - px;
     const dZ = iz - pz;
-    if(Math.hypot(dX, dZ) < 1e-3) return [null, "intercept_target_same_as_pearl"];
+    const D = Math.hypot(dX, dZ);
+    if (D < 1e-3) return [null, "intercept_target_same_as_pearl"];
+
     const target_virtual = [ix, py, iz];
     const direct = auto_dir(target_virtual, pearl_xyz);
     const tnt_y = auto_tnt_y(py);
     const [tntL, tntR] = get_tnt_pair(pearl_xyz, tnt_y, direct);
     const vL = calc_thrust(pearl_xyz, tntL);
     const vR = calc_thrust(pearl_xyz, tntR);
-    if(Math.hypot(vL[0],vL[2])<1e-12 || Math.hypot(vR[0],vR[2])<1e-12){
-        return [null, "tnt_out_of_range"];
-    }
+    
     const a = vL[0], c = vL[2];
     const b = vR[0], d = vR[2];
-    const is_axis_x = Math.abs(dZ) < phys.AXIS_EPS;
-    const is_axis_z = Math.abs(dX) < phys.AXIS_EPS;
-    if(is_axis_x || is_axis_z){
-        let candidate_list = [];
-        for(let M=1; M<=phys.MAX_SINGLE_ARRAY; M++){
-            const N = M;
-            const v0x = M*a + N*b;
-            const v0z = M*c + N*d;
-            if(Math.hypot(v0x, v0z) <1e-10) continue;
-            const t = solve_t_for_target(v0x, v0z, dX, dZ);
-            if(t===null || !(0<t && t<phys.MAX_TICK)) continue;
-            const drop = get_drop_height(t);
-            if(drop > phys.MAX_DROP) continue;
-            const pos_check = get_pos(pearl_xyz, [v0x,0.0,v0z], t);
-            const err = Math.hypot(pos_check[0]-ix, pos_check[2]-iz);
-            if(err < phys.ERR_POS_EPS){
-                candidate_list.push({
-                    nL:M, nR:N, total:M+N, t_intercept:t, drop:drop,
-                    v0:[v0x,0.0,v0z], check_pos:pos_check, direct:direct
-                });
-                break;
-            }
-        }
-        if(candidate_list.length ===0) return [null,"intercept_tick_too_large"];
-        return [candidate_list[0], null];
+
+    const maxDrop = phys.MAX_DROP;
+    const G = phys.G;
+    const t_max = (1 + Math.sqrt(1 + 8 * maxDrop / G)) / 2;
+
+    const vx_req = dX / t_max;
+    const vz_req = dZ / t_max;
+
+    const det = a * d - b * c;
+    let nLf = 0, nRf = 0;
+    
+    if (Math.abs(det) < 1e-10) {
+        const pv = Math.hypot(a, c);
+        nLf = (vx_req * a + vz_req * c) / (pv * pv || 1e-10);
+        nRf = 0;
+    } else {
+        nLf = (vx_req * d - vz_req * b) / det;
+        nRf = (a * vz_req - c * vx_req) / det;
     }
-    const det = a*d - b*c;
-    const eps_det = 1e-10;
-    if(Math.abs(det) < eps_det){
-        const dot = a*dX + c*dZ;
-        if(dot <=1e-10) return [null,"intercept_no_solution_basis"];
-        for(let S=1; S<=phys.MAX_SINGLE_ARRAY; S++){
-            const v0x = S*a;
-            const v0z = S*c;
-            const t = solve_t_for_target(v0x, v0z, dX, dZ);
-            if(t===null || !(0<t && t<phys.MAX_TICK)) continue;
-            const drop = get_drop_height(t);
-            if(drop>phys.MAX_DROP) continue;
-            const pos_check = get_pos(pearl_xyz, [v0x,0.0,v0z], t);
-            const err = Math.hypot(pos_check[0]-ix, pos_check[2]-iz);
-            if(err < phys.ERR_POS_EPS){
+
+    if (nLf < 0) nLf = 0;
+    if (nRf < 0) nRf = 0;
+
+    let baseTotal = Math.round(nLf + nRf);
+    if (baseTotal < 1) baseTotal = 1;
+
+    const searchLimit = Math.min(phys.MAX_SINGLE_ARRAY * 2, baseTotal + 200);
+    const ratio = (nLf + nRf) > 0 ? nLf / (nLf + nRf) : 0.5;
+    
+    for (let totalS = baseTotal; totalS <= searchLimit; totalS++) {
+        for (let off = -3; off <= 3; off++) {
+            let nL = Math.round(totalS * ratio) + off;
+            let nR = totalS - nL;
+            
+            if (nL < 0 || nR < 0 || (nL === 0 && nR === 0)) continue;
+            if (nL > phys.MAX_SINGLE_ARRAY || nR > phys.MAX_SINGLE_ARRAY) continue;
+            
+            const v0x = nL * a + nR * b;
+            const v0z = nL * c + nR * d;
+            const speed = Math.hypot(v0x, v0z);
+            if (speed < 1e-10) continue;
+            if (v0x * dX + v0z * dZ <= 1e-10) continue;
+            
+            const t = D / speed;
+            const drop = G * T(t);
+            
+            if (t >= phys.MAX_TICK || drop > maxDrop + 1e-9) continue;
+            
+            const pos_check = get_pos(pearl_xyz, [v0x, 0, v0z], t);
+            const err = Math.hypot(pos_check[0] - ix, pos_check[2] - iz);
+            
+            if (err < phys.ERR_POS_EPS) {
                 return [{
-                    nL:S, nR:0, total:S, t_intercept:t, drop:drop,
-                    v0:[v0x,0.0,v0z], check_pos:pos_check, direct:direct
+                    nL, nR, total: totalS, t_intercept: t, drop,
+                    v0: [v0x, 0, v0z], check_pos: pos_check, direct
                 }, null];
             }
         }
-        return [null,"intercept_tick_too_large"];
     }
-    const M0 = (d*dX - b*dZ)/det;
-    const N0 = (a*dZ - c*dX)/det;
-    if(M0 <=1e-8 && N0 <=1e-8) return [null,"intercept_no_solution_basis"];
-    const ratio_sum = M0 + N0;
-    const m_ratio = M0 / ratio_sum;
-    const n_ratio = N0 / ratio_sum;
-    let found = null;
-    for(let totalS=2; totalS <= phys.MAX_SINGLE_ARRAY*2; totalS++){
-        let Mc = Math.round(totalS * m_ratio);
-        let Nc = Math.round(totalS * n_ratio);
-        Mc = Math.max(1, Mc);
-        Nc = Math.max(1, Nc);
-        if(Mc>phys.MAX_SINGLE_ARRAY || Nc>phys.MAX_SINGLE_ARRAY) continue;
-        const v0x = Mc*a + Nc*b;
-        const v0z = Mc*c + Nc*d;
-        const dot = v0x*dX + v0z*dZ;
-        if(dot <=1e-10) continue;
-        const t = solve_t_for_target(v0x, v0z, dX, dZ);
-        if(t===null || !(0<t && t<phys.MAX_TICK)) continue;
-        const drop = get_drop_height(t);
-        if(drop>phys.MAX_DROP) continue;
-        const pos_check = get_pos(pearl_xyz, [v0x,0.0,v0z], t);
-        const err = Math.hypot(pos_check[0]-ix, pos_check[2]-iz);
-        if(err < phys.ERR_POS_EPS){
-            for(let dL=-phys.SEARCH_RANGE; dL<=phys.SEARCH_RANGE; dL++){
-                for(let dR=-phys.SEARCH_RANGE; dR<=phys.SEARCH_RANGE; dR++){
-                    const m_t = Mc + dL;
-                    const n_t = Nc + dR;
-                    if(m_t<1 || n_t<1 || m_t>phys.MAX_SINGLE_ARRAY || n_t>phys.MAX_SINGLE_ARRAY) continue;
-                    const vx_t = m_t*a + n_t*b;
-                    const vz_t = m_t*c + n_t*d;
-                    const t_t = solve_t_for_target(vx_t, vz_t, dX, dZ);
-                    if(t_t===null || !(0<t_t && t_t<phys.MAX_TICK)) continue;
-                    const drop_t = get_drop_height(t_t);
-                    if(drop_t>phys.MAX_DROP) continue;
-                    const pos_t = get_pos([px,py,pz],[vx_t,0.0,vz_t],t_t);
-                    const err_t = Math.hypot(pos_t[0]-ix, pos_t[2]-iz);
-                    if(err_t < phys.ERR_POS_EPS){
-                        found = {
-                            nL:m_t, nR:n_t, total:m_t+n_t, t_intercept:t_t, drop:drop_t,
-                            v0:[vx_t,0.0,vz_t], check_pos:pos_t, direct:direct
-                        };
-                        return [found, null];
-                    }
-                }
+    
+    for (let totalS = baseTotal; totalS <= searchLimit; totalS++) {
+        for (let off = -3; off <= 3; off++) {
+            let nL = Math.round(totalS * ratio) + off;
+            let nR = totalS - nL;
+            if (nL < 0 || nR < 0 || (nL === 0 && nR === 0)) continue;
+            if (nL > phys.MAX_SINGLE_ARRAY || nR > phys.MAX_SINGLE_ARRAY) continue;
+            
+            const v0x = nL * a + nR * b;
+            const v0z = nL * c + nR * d;
+            const speed = Math.hypot(v0x, v0z);
+            if (speed < 1e-10) continue;
+            
+            const t = D / speed;
+            const drop = G * T(t);
+            if (t >= phys.MAX_TICK || drop > maxDrop + 1e-9) continue;
+            
+            const pos_check = get_pos(pearl_xyz, [v0x, 0, v0z], t);
+            const err = Math.hypot(pos_check[0] - ix, pos_check[2] - iz);
+            
+            if (err < phys.ERR_POS_EPS * 10) {
+                return [{
+                    nL, nR, total: totalS, t_intercept: t, drop,
+                    v0: [v0x, 0, v0z], check_pos: pos_check, direct
+                }, null];
             }
         }
     }
-    if(found === null) return [null,"intercept_tick_too_large"];
-    return [found, null];
+
+    return [null, "intercept_tick_too_large"];
 }
+
+/* ============================================================
+ * ROM 模式
+ * 开启后 A / G 只在火控架构（arch）可组合出的 TNT 数量里寻解。
+ * 架构来源优先级：已加载的 JSON 配置 > 弹窗手输。
+ * ============================================================ */
+let romEnabled = false;
+let romArch = null;
+
+/** 解析 "2 4 8,16" 这类输入为整数数组 */
+function parse_arch_text(txt) {
+    return String(txt == null ? "" : txt)
+        .trim()
+        .split(/[\s,，;；]+/)
+        .filter(Boolean)
+        .map(Number)
+        .filter((n) => Number.isFinite(n) && n > 0 && n === Math.floor(n));
+}
+
+/** A 模式在架构约束下求解：平射复用 C 模式算法；抛射在架构池内取落点误差最小 */
+function solve_A_rom(target, pearl, tntL, tntR, arch) {
+    const [tx, ty, tz] = target;
+    const [px, py, pz] = pearl;
+    const vL = calc_thrust(pearl, tntL);
+    const vR = calc_thrust(pearl, tntR);
+    if ((vL[0] === 0 && vL[1] === 0 && vL[2] === 0) || (vR[0] === 0 && vR[1] === 0 && vR[2] === 0)) {
+        return [null, "tnt_out_of_range"];
+    }
+    const dx = tx - px, dz = tz - pz;
+    const dist_h = Math.hypot(dx, dz);
+    if (dist_h < 0.01) return [null, "target_too_close"];
+
+    // 平射：沿用已验证"与穷举等优"的 C 模式求解器
+    if (!(ty > py + 0.01)) {
+        const [res, err] = solve_C_fast(target, pearl, tntL, tntR, arch);
+        // 架构约束下只有一个最优组合，补一行候选表以保持 A 模式输出结构
+        if (res && !Array.isArray(res.top5)) res.top5 = [[res.error, res.nL, res.nR]];
+        return [res, err];
+    }
+
+    // 抛射：不追求最省当量，只在架构池里挑落点误差最小的组合（保持 A 模式原策略）
+    const dy = ty - py;
+    const a = vL[0], c = vL[2], b = vR[0], d = vR[2];
+    const pool = generate_arch_sum(arch);
+    if (pool.length < 2) return [null, "no_solution"];
+    const poolNums = pool.map(([v]) => Number(v));
+    let best = null, bestErr = Infinity;
+
+    const consider = (nL, nR, el, er) => {
+        const vx = nL * a + nR * b;
+        const vz = nL * c + nR * d;
+        const v_h = Math.hypot(vx, vz);
+        if (v_h < 1e-10 || vx * dx + vz * dz <= 0) return;
+        const t = dist_h / v_h;
+        if (!(t > 0) || t > phys.MAX_TICK) return;
+        const v0y = (dy + phys.G * T(t)) / t;
+        const pos_x = px + vx * t, pos_z = pz + vz * t;
+        const err = Math.hypot(pos_x - tx, pos_z - tz);
+        if (err < bestErr) {
+            bestErr = err;
+            best = {
+                v0: [vx, v0y, vz], t_land: t, land_pos: [pos_x, ty, pos_z],
+                y_state: "抛射（抛物线）", angle: angle_state(pearl, tntL, tntR, nL, nR),
+                v0y: v0y, isProjectile: true, nL: nL, nR: nR,
+                expr_L: el, expr_R: er, error: err
+            };
+        }
+    };
+
+    if (pool.length * pool.length <= 250000) {
+        for (let i = 0; i < pool.length; i++) {
+            for (let j = 0; j < pool.length; j++) {
+                if (poolNums[i] === 0 && poolNums[j] === 0) continue;
+                consider(poolNums[i], poolNums[j], pool[i][1], pool[j][1]);
+            }
+        }
+    } else {
+        // 架构过大：按方向比例约束取最近邻，避免平方级枚举
+        const K1 = a * dz - c * dx, K2 = b * dz - d * dx;
+        for (const [nlv, el] of pool) {
+            const nL = Number(nlv);
+            const ideal = Math.abs(K2) > 1e-12 ? -nL * K1 / K2 : 0;
+            const idx = binary_search_nearest(pool, Math.max(0, ideal));
+            for (let k = Math.max(0, idx - 2); k <= Math.min(pool.length - 1, idx + 2); k++) {
+                if (nL === 0 && poolNums[k] === 0) continue;
+                consider(nL, poolNums[k], el, pool[k][1]);
+            }
+        }
+    }
+
+    if (!best) return [null, "no_solution"];
+    return [best, null];
+}
+
+/** G 模式在架构约束下求解：仍以"最少 TNT"为目标，只是可用数量被架构限死 */
+function solve_intercept_rom(px, pz, ix, iz, pyOverride, arch) {
+    const py = (pyOverride !== undefined && pyOverride !== null) ? pyOverride : phys.FIX_PEARL_Y;
+    const pearl_xyz = [px, py, pz];
+    const dX = ix - px, dZ = iz - pz;
+    const D = Math.hypot(dX, dZ);
+    if (D < 1e-3) return [null, "intercept_target_same_as_pearl"];
+
+    const direct = auto_dir([ix, py, iz], pearl_xyz);
+    const [tntL, tntR] = get_tnt_pair(pearl_xyz, auto_tnt_y(py), direct);
+    const vL = calc_thrust(pearl_xyz, tntL);
+    const vR = calc_thrust(pearl_xyz, tntR);
+    const a = vL[0], c = vL[2], b = vR[0], d = vR[2];
+    const pool = generate_arch_sum(arch)
+        .map(([v, e]) => [Number(v), e])
+        .filter(([v]) => v <= phys.MAX_SINGLE_ARRAY);
+    if (pool.length < 2) return [null, "no_solution"];
+
+    const maxDrop = phys.MAX_DROP;
+    const tol = phys.ERR_POS_EPS * 10;   // 架构离散，容差放宽到 0.1 格
+    let best = null;
+
+    const consider = (nL, nR, el, er) => {
+        if (nL === 0 && nR === 0) return;
+        const v0x = nL * a + nR * b;
+        const v0z = nL * c + nR * d;
+        const speed = Math.hypot(v0x, v0z);
+        if (speed < 1e-10) return;
+        if (v0x * dX + v0z * dZ <= 1e-10) return;
+        const t = D / speed;
+        const drop = phys.G * T(t);
+        if (t >= phys.MAX_TICK || drop > maxDrop + 1e-9) return;
+        const pos_check = get_pos(pearl_xyz, [v0x, 0, v0z], t);
+        const err = Math.hypot(pos_check[0] - ix, pos_check[2] - iz);
+        if (err > tol) return;
+        const total = nL + nR;
+        if (!best || total < best.total || (total === best.total && err < best.error)) {
+            best = {
+                nL, nR, total, t_intercept: t, drop,
+                v0: [v0x, 0, v0z], check_pos: pos_check, direct,
+                expr_L: el, expr_R: er, error: err
+            };
+        }
+    };
+
+    if (pool.length * pool.length <= 250000) {
+        for (const [nL, el] of pool) for (const [nR, er] of pool) consider(nL, nR, el, er);
+    } else {
+        // 架构过大：每个左档位只取"方向所需"的右档位邻域，避免平方级枚举
+        const K1 = a * dZ - c * dX;
+        const K2 = b * dZ - d * dX;
+        for (const [nL, el] of pool) {
+            const ideal = Math.abs(K2) > 1e-12 ? -nL * K1 / K2 : 0;
+            const idx = binary_search_nearest(pool, Math.max(0, ideal));
+            for (let k = Math.max(0, idx - 2); k <= Math.min(pool.length - 1, idx + 2); k++) {
+                consider(nL, pool[k][0], el, pool[k][1]);
+            }
+        }
+    }
+
+    if (!best) return [null, "intercept_tick_too_large"];
+    return [best, null];
+}
+
 
 // F模式全局缓存
 let fCalcCache = null;
@@ -839,10 +1054,17 @@ let configFileName = "无";
 const outBox = document.getElementById("outBox");
 function guiPrint(s){ outBox.textContent += s+"\n"; }
 function clearOutput(){ outBox.textContent = "等待执行计算..."; }
+/** 开始一次新的计算：清空输出框（保留"清空输出"按钮的占位语义） */
+function beginOutput(){ outBox.textContent = ""; }
 function switchMode(mode){
-    ["panelA","panelB","panelC","panelF","panelG"].forEach(id=>document.getElementById(id).classList.add("hidden"));
+    ["panelA","panelB","panelF","panelG"].forEach(id=>document.getElementById(id).classList.add("hidden"));
     document.getElementById("panel"+mode).classList.remove("hidden");
     document.getElementById("currentModeText").innerText = mode+"模式";
+    for (const m of ["A", "B", "F", "G"]) {
+        const btn = document.getElementById("modeBtn" + m);
+        if (!btn) continue;
+        if (m === mode) btn.classList.add("active"); else btn.classList.remove("active");
+    }
 }
 function openPhysicsPanel(){ document.getElementById("panelPhys").classList.remove("hidden"); readPhysToGui(); }
 function closePhysicsPanel(){ document.getElementById("panelPhys").classList.add("hidden"); }
@@ -859,6 +1081,7 @@ function readPhysToGui(){
     document.getElementById("p_ERR_POS_EPS").value = phys.ERR_POS_EPS;
     document.getElementById("p_FIX_PEARL_Y").value = phys.FIX_PEARL_Y;
     document.getElementById("p_MAX_DROP").value = phys.MAX_DROP;
+    document.getElementById("p_BISECT_TIMES").value = phys.BISECT_TIMES;
 }
 function savePhysFromGui(){
     phys.G = parseFloat(document.getElementById("p_G").value);
@@ -871,93 +1094,220 @@ function savePhysFromGui(){
     phys.ERR_POS_EPS = parseFloat(document.getElementById("p_ERR_POS_EPS").value);
     phys.FIX_PEARL_Y = parseFloat(document.getElementById("p_FIX_PEARL_Y").value);
     phys.MAX_DROP = parseFloat(document.getElementById("p_MAX_DROP").value);
+
+    let bisectVal = Number(document.getElementById("p_BISECT_TIMES").value);
+    if (isNaN(bisectVal)) bisectVal = 120;
+    bisectVal = Math.round(bisectVal);
+    if (bisectVal <= 0) bisectVal = 120;
+    if (bisectVal > 512) bisectVal = 512;
+    phys.BISECT_TIMES = bisectVal;
+
     localStorage.setItem("phys",JSON.stringify(phys));
-    guiPrint("物理参数已保存至本地存储");
+    // 保存后自动回读一遍，把修正值（如二分次数取整）同步回界面
+    readPhysToGui();
+    guiPrint("✅物理参数已保存至本地存储");
 }
 function resetPhysDefault(){
     phys = JSON.parse(JSON.stringify(DEFAULT_PHYS));
     localStorage.setItem("phys",JSON.stringify(phys));
     readPhysToGui();
-    guiPrint("已恢复全部物理参数为原版默认");
+    guiPrint("✅已恢复全部物理参数为原版默认");
 }
 function guiResetAll(){
     phys = JSON.parse(JSON.stringify(DEFAULT_PHYS));
     configData = null; configFileName="无"; fCalcCache=null;
+    romEnabled = false; romArch = null;
+    updateRomButton();
     localStorage.removeItem("phys");
     document.querySelectorAll("input[type=number],input:not([type=file]),select").forEach(el=>{el.value="";});
     document.getElementById("guiConfigStatus").innerText="无";
     document.getElementById("fileLoadHint").innerText="未加载文件";
+    closeRomModal();
     clearOutput();
-    guiPrint("全部状态重置完成");
+    guiPrint("✅全部状态重置完成");
 }
-// H模式文件加载
+
+/* ---------- ROM 模式 ---------- */
+function updateRomButton(){
+    const btn = document.getElementById("romToggle");
+    if (romEnabled) {
+        btn.classList.add("active");
+        btn.innerText = "ROM模式：开";
+    } else {
+        btn.classList.remove("active");
+        btn.innerText = "ROM模式";
+    }
+    document.getElementById("romStatus").innerText = romEnabled ? "开" : "关";
+    const badge = document.getElementById("romBadge");
+    if (romEnabled) badge.classList.add("rom-on"); else badge.classList.remove("rom-on");
+}
+function openRomModal(){
+    const input = document.getElementById("romArchInput");
+    input.value = romArch ? romArch.join(" ") : "";
+    document.getElementById("romModal").classList.remove("hidden");
+}
+function closeRomModal(){
+    document.getElementById("romModal").classList.add("hidden");
+}
+function toggleRomMode(){
+    if (romEnabled) {
+        romEnabled = false;
+        updateRomButton();
+        guiPrint("ROM模式已关闭，A / G 恢复默认求解。");
+        return;
+    }
+    // 已加载配置文件则直接使用其中的火控架构
+    const cfgArch = configData && Array.isArray(configData.arch) ? parse_arch_text(configData.arch.join(" ")) : null;
+    if (cfgArch && cfgArch.length) {
+        romArch = cfgArch;
+        romEnabled = true;
+        updateRomButton();
+        guiPrint(`✅ROM模式已启用：使用配置文件中的火控架构 [${romArch.join(",")}]`);
+        return;
+    }
+    openRomModal();
+}
+function saveRomArch(){
+    const arr = parse_arch_text(document.getElementById("romArchInput").value);
+    if (!arr.length) {
+        guiPrint("⚠火控架构不能为空，请输入如 2 4 8 16");
+        return;
+    }
+    romArch = arr;
+    romEnabled = true;
+    closeRomModal();
+    updateRomButton();
+    guiPrint(`✅ROM模式已启用：火控架构 [${romArch.join(",")}]`);
+}
+function cancelRomArch(){
+    closeRomModal();
+    romEnabled = false;
+    updateRomButton();
+    guiPrint("已取消：ROM模式关闭。");
+}
+function openFileChooser(){
+    const fi = document.getElementById("guiFileInput");
+    fi.accept = ".json,application/json,text/plain,application/octet-stream";
+    fi.removeAttribute("capture");
+    fi.value = "";
+    fi.click();
+}
 document.getElementById("guiFileInput").onchange = async function(e){
     const file = e.target.files[0];
     if(!file) return;
     try{
         const txt = await file.text();
         const jo = JSON.parse(txt);
-        if(!("pearlX" in jo)||!("pearlY" in jo)||!("pearlZ" in jo)||!("arch" in jo)){
-            guiPrint(""+ERR_MSG.json_missing);
+        if(!jo || typeof jo !== "object" || !("pearlX" in jo)||!("pearlY" in jo)||!("pearlZ" in jo)||!("arch" in jo)){
+            guiPrint("❌"+ERR_MSG.json_missing);
             document.getElementById("fileLoadHint").innerText="解析失败";
             return;
         }
         configData = jo; configFileName = file.name;
         document.getElementById("guiConfigStatus").innerText = configFileName;
         document.getElementById("fileLoadHint").innerText = "已加载："+configFileName;
-        guiPrint("JSON配置加载成功："+configFileName);
+        guiPrint("✅JSON配置加载成功："+configFileName);
+        // 上传后自动填入表单
+        fillFormFromConfig();
+        // ROM 开启时，火控架构直接跟随配置文件
+        const cfgArch = parse_arch_text((jo.arch || []).join(" "));
+        if (cfgArch.length) {
+            romArch = cfgArch;
+            if (romEnabled) {
+                updateRomButton();
+                guiPrint(`ℹROM火控架构已同步为配置文件中的 [${romArch.join(",")}]`);
+            }
+        }
     }catch(err){
-        guiPrint(""+ERR_MSG.json_parse_err);
+        guiPrint("❌"+ERR_MSG.json_parse_err);
         document.getElementById("fileLoadHint").innerText="解析失败";
     }
     this.value="";
 };
 function fillFormFromConfig(){
-    if(!configData){ guiPrint("没有已加载的配置文件"); return; }
+    if(!configData){ guiPrint("⚠没有已加载的配置文件"); return; }
     const px = configData.pearlX, py=configData.pearlY, pz=configData.pearlZ;
-    //A
     document.getElementById("a_pe_x").value=px; document.getElementById("a_pe_y").value=py; document.getElementById("a_pe_z").value=pz;
-    //B
     document.getElementById("b_pe_x").value=px; document.getElementById("b_pe_y").value=py; document.getElementById("b_pe_z").value=pz;
-    //C
-    document.getElementById("c_pe_x").value=px; document.getElementById("c_pe_y").value=py; document.getElementById("c_pe_z").value=pz;
-    document.getElementById("c_arch").value = (configData.arch||[]).join(" ");
-    //F
     document.getElementById("f_pe_x").value=px; document.getElementById("f_pe_y").value=py; document.getElementById("f_pe_z").value=pz;
-    //G
     document.getElementById("g_pe_x").value=px; document.getElementById("g_pe_z").value=pz;
-    guiPrint("已把JSON珍珠坐标填充到全部模式表单");
+    const cfgArch = parse_arch_text((configData.arch || []).join(" "));
+    if (cfgArch.length) {
+        romArch = cfgArch;
+        document.getElementById("romArchInput").value = cfgArch.join(" ");
+    }
+    guiPrint("✅已把JSON配置填入各模式表单");
 }
-// ==========各模式运行入口==========
+
 function runModeA(){
-    clearOutput();
+    beginOutput();
     const px = parseFloat(document.getElementById("a_pe_x").value);
     const py = parseFloat(document.getElementById("a_pe_y").value);
     const pz = parseFloat(document.getElementById("a_pe_z").value);
     const tx = parseFloat(document.getElementById("a_t_x").value);
     const ty = parseFloat(document.getElementById("a_t_y").value);
     const tz = parseFloat(document.getElementById("a_t_z").value);
-    if([px,py,pz,tx,ty,tz].some(isNaN)){ guiPrint(""+ERR_MSG.input_invalid); return; }
+    if([px,py,pz,tx,ty,tz].some(isNaN)){ guiPrint("❌"+ERR_MSG.input_invalid); return; }
+
+    // 检查Y坐标是否几乎相等，如果是则自动切换为G模式（拦截模式）接管
+    if (Math.abs(py - ty) < 0.01) {
+        guiPrint(`【A模式｜自动跳转拦截】\n珍珠(${px.toFixed(2)},${py.toFixed(2)},${pz.toFixed(2)}) 目标(${tx.toFixed(2)},${ty.toFixed(2)},${tz.toFixed(2)})\n`);
+        guiPrint(`✨ 坐标差TNT比模型已接管计算 (Y坐标几乎相等)`);
+
+        const [resG, errG] = romEnabled
+            ? solve_intercept_rom(px, pz, tx, tz, py, romArch)
+            : solve_intercept(px, pz, tx, tz, py);
+        if (!resG) { guiPrint("\n❌计算失败：" + ERR_MSG[errG]); return; }
+
+        const dropPct = phys.MAX_DROP > 0 ? (resG.drop / phys.MAX_DROP * 100).toFixed(1) : "0.0";
+        guiPrint(`\n====G拦截结果====`);
+        guiPrint(`打角方向     ：${resG.direct}`);
+        guiPrint(`左阵列TNT    ：${resG.nL}`);
+        guiPrint(`右阵列TNT    ：${resG.nR}`);
+        guiPrint(`总TNT数量    ：${resG.total}`);
+        guiPrint(`经过拦截点Tick：${resG.t_intercept.toFixed(2)}`);
+        guiPrint(`经过拦截点秒数：${(resG.t_intercept/20).toFixed(3)} s`);
+        guiPrint(`到达拦截点下落：${resG.drop.toFixed(3)} 格（上限${phys.MAX_DROP}，占比 ${dropPct}%）`);
+        guiPrint(`校验拦截坐标：X=${resG.check_pos[0].toFixed(3)} Z=${resG.check_pos[2].toFixed(3)}`);
+        if (romEnabled && resG.expr_L !== undefined) {
+            guiPrint(`ROM左阵列表达式：${resG.expr_L}`);
+            guiPrint(`ROM右阵列表达式：${resG.expr_R}`);
+        }
+        return;
+    }
+
     const pearl = [px,py,pz]; const target=[tx,ty,tz];
     const direct = auto_dir(target, pearl); const tnt_y = auto_tnt_y(py);
     const [tntL,tntR] = get_tnt_pair(pearl, tnt_y, direct);
     guiPrint(`【A模式｜落点反推TNT】\n珍珠(${px.toFixed(2)},${py.toFixed(2)},${pz.toFixed(2)}) 目标(${tx.toFixed(2)},${ty.toFixed(2)},${tz.toFixed(2)})\n自动判定方向：${direct}｜TNT高度=${tnt_y.toFixed(3)}`);
-    const [res,err] = solve_A(target,pearl,tntL,tntR);
-    if(!res){ guiPrint("\n计算失败："+ERR_MSG[err]); return; }
+    const [res,err] = romEnabled
+        ? solve_A_rom(target, pearl, tntL, tntR, romArch)
+        : solve_A(target, pearl, tntL, tntR);
+    if(!res){ guiPrint("\n❌计算失败："+ERR_MSG[err]); return; }
     guiPrint(`\n====前五候选组合（排名｜左｜右｜水平偏差）====`);
-    for(let i=0;i<res.top5.length;i++){
-        const [er, nl, nr] = res.top5[i];
-        guiPrint(` ${i+1}\t${nl}\t${nr}\t${er.toFixed(6)}`);
-    }
+    const rows = Array.isArray(res.top5) ? res.top5 : [[res.error, res.nL, res.nR]];
+    for(let i=0;i<rows.length;i++) guiPrint(` ${i+1}\t${rows[i][1]}\t${rows[i][2]}\t${rows[i][0].toFixed(6)}`);
+
     guiPrint(`\n====最优结果 ====`);
     guiPrint(`打角状态：${res.angle}`);
     guiPrint(`左阵列：${res.nL}颗  右阵列：${res.nR}颗  总TNT：${res.nL+res.nR}`);
     guiPrint(`飞行tick：${res.t_land.toFixed(2)} (${(res.t_land/20).toFixed(2)}秒)`);
+
+    if (res.isProjectile) {
+        guiPrint(`状态：抛射（抛物线）`);
+        guiPrint(`Y轴动量：${res.v0y.toFixed(4)} 格/tick（向上初速度）`);
+    }
+
     guiPrint(`落地 X=${res.land_pos[0].toFixed(4)}  Z=${res.land_pos[2].toFixed(4)}`);
     guiPrint(`水平偏差：${res.error.toFixed(4)}格`);
+    if (romEnabled && res.expr_L !== undefined) {
+        guiPrint(`ROM左阵列表达式：${res.expr_L}`);
+        guiPrint(`ROM右阵列表达式：${res.expr_R}`);
+    }
 }
+
 function runModeB(){
-    clearOutput();
+    beginOutput();
     const px = parseFloat(document.getElementById("b_pe_x").value);
     const py = parseFloat(document.getElementById("b_pe_y").value);
     const pz = parseFloat(document.getElementById("b_pe_z").value);
@@ -965,46 +1315,21 @@ function runModeB(){
     const nR = parseInt(document.getElementById("b_nr").value);
     const dir = document.getElementById("b_dir").value;
     const yLand = parseFloat(document.getElementById("b_y_land").value);
-    if([px,py,pz,nL,nR,yLand].some(isNaN)){ guiPrint(""+ERR_MSG.input_invalid); return; }
+    if([px,py,pz,nL,nR,yLand].some(isNaN)){ guiPrint("❌"+ERR_MSG.input_invalid); return; }
     const pearl = [px,py,pz]; const tnt_y = auto_tnt_y(py);
     const [tntL,tntR] = get_tnt_pair(pearl, tnt_y, dir);
     guiPrint(`【B模式｜TNT正向算落点】\n珍珠(${px},${py},${pz})｜nL=${nL} nR=${nR}｜方向${dir}｜落地Y=${yLand}`);
     const [res,err] = solve_B(nL,nR,pearl,tntL,tntR,yLand);
-    if(!res){ guiPrint("\n计算失败："+ERR_MSG[err]); return; }
+    if(!res){ guiPrint("\n❌计算失败："+ERR_MSG[err]); return; }
     guiPrint(`\n====计算结果====`);
     guiPrint(`打角状态：${res.angle}`);
     guiPrint(`飞行tick：${res.t_land.toFixed(2)} (${(res.t_land/20).toFixed(2)}秒)`);
     guiPrint(`落点 X=${res.land_pos[0].toFixed(4)} Y=${res.land_pos[1].toFixed(4)} Z=${res.land_pos[2].toFixed(4)}`);
     guiPrint(`竖直运动状态：${res.y_state}`);
 }
-function runModeC(){
-    clearOutput();
-    const px = parseFloat(document.getElementById("c_pe_x").value);
-    const py = parseFloat(document.getElementById("c_pe_y").value);
-    const pz = parseFloat(document.getElementById("c_pe_z").value);
-    const tx = parseFloat(document.getElementById("c_t_x").value);
-    const ty = parseFloat(document.getElementById("c_t_y").value);
-    const tz = parseFloat(document.getElementById("c_t_z").value);
-    const archStr = document.getElementById("c_arch").value.trim();
-    const arch = archStr ? archStr.split(/\s+/).map(Number) : [];
-    if([px,py,pz,tx,ty,tz].some(isNaN)){ guiPrint(""+ERR_MSG.input_invalid); return; }
-    const pearl = [px,py,pz]; const target=[tx,ty,tz];
-    const direct = auto_dir(target, pearl); const tnt_y = auto_tnt_y(py);
-    const [tntL,tntR] = get_tnt_pair(pearl, tnt_y, direct);
-    guiPrint(`【C模式｜自定义火控架构】\n珍珠(${px},${py},${pz})｜目标(${tx},${ty},${tz})\n架构:[${arch.join(",")}]｜自动方向${direct} TNT高度=${tnt_y.toFixed(3)}`);
-    const [res,err] = solve_C_fast(target,pearl,tntL,tntR,arch);
-    if(!res){ guiPrint("\n计算失败："+ERR_MSG[err]); return; }
-    guiPrint(`\n====C模式结果====`);
-    guiPrint(`打角状态：${res.angle}`);
-    guiPrint(`左阵列表达式：${res.expr_L} 共${res.nL}颗`);
-    guiPrint(`右阵列表达式：${res.expr_R} 共${res.nR}颗`);
-    guiPrint(`总TNT：${res.nL+res.nR}`);
-    guiPrint(`飞行tick：${res.t_land.toFixed(2)} (${(res.t_land/20).toFixed(2)}秒)`);
-    guiPrint(`落地 X=${res.land_pos[0].toFixed(4)} Z=${res.land_pos[2].toFixed(4)}`);
-    guiPrint(`水平偏差：${res.error.toFixed(4)}格`);
-}
+
 function runModeF_calc(){
-    clearOutput();
+    beginOutput();
     const px = parseFloat(document.getElementById("f_pe_x").value);
     const py = parseFloat(document.getElementById("f_pe_y").value);
     const pz = parseFloat(document.getElementById("f_pe_z").value);
@@ -1012,49 +1337,55 @@ function runModeF_calc(){
     const nR = parseInt(document.getElementById("f_nr").value);
     const dir = document.getElementById("f_dir").value;
     const yLand = parseFloat(document.getElementById("f_y_land").value);
-    if([px,py,pz,nL,nR,yLand].some(isNaN)){ guiPrint(""+ERR_MSG.input_invalid); return; }
+    if([px,py,pz,nL,nR,yLand].some(isNaN)){ guiPrint("❌"+ERR_MSG.input_invalid); return; }
     const pearl = [px,py,pz]; const tnt_y = auto_tnt_y(py);
     const [tntL,tntR] = get_tnt_pair(pearl, tnt_y, dir);
     const [res,err] = solve_B(nL,nR,pearl,tntL,tntR,yLand);
-    if(!res){ guiPrint("计算失败："+ERR_MSG[err]); fCalcCache=null; return; }
+    if(!res){ guiPrint("❌计算失败："+ERR_MSG[err]); fCalcCache=null; return; }
     fCalcCache = {pearl, v0:res.v0, t_land:res.t_land};
     guiPrint(`【F模式｜弹道计算完成】`);
     guiPrint(`飞行时间：${res.t_land.toFixed(4)} tick`);
     guiPrint(`落点 X=${res.land_pos[0].toFixed(4)} Y=${res.land_pos[1].toFixed(4)} Z=${res.land_pos[2].toFixed(4)}`);
     guiPrint(`运动状态：${res.y_state}`);
-    guiPrint("\n现在可以输入tick进行坐标查询");
+    guiPrint("\n👉现在可以输入tick进行坐标查询");
 }
+
 function runModeF_query(){
-    if(!fCalcCache){ guiPrint("请先执行【1.计算弹道】"); return; }
+    if(!fCalcCache){ guiPrint("⚠请先执行【1.计算弹道】"); return; }
     const q = document.getElementById("f_tick_query").value.trim();
     const {pearl, v0, t_land} = fCalcCache;
     guiPrint(`\n---Tick查询：${q}---`);
     if(q.includes("_")){
-        const [st,et] = q.split("_").map(Number);
-        if(isNaN(st)||isNaN(et)||st<=0||et<=0||st>t_land||et>t_land||st>et){
-            guiPrint("tick范围输入非法"); return;
-        }
+        const parts = q.split("_");
+        if(parts.length !== 2){ guiPrint("⚠无效格式：请使用‘开始_结束’格式"); return; }
+        const [st,et] = parts.map(Number);
+        if(isNaN(st)||isNaN(et)||st<=0||et<=0||st>t_land||et>t_land||st>et){ guiPrint("⚠tick范围输入非法"); return; }
         for(let t=st;t<=et;t++){
             const pos = get_pos(pearl, v0, t);
             guiPrint(`tick ${t}: X=${pos[0].toFixed(6)}, Y=${pos[1].toFixed(6)}, Z=${pos[2].toFixed(6)}`);
         }
     }else{
         const tk = Number(q);
-        if(isNaN(tk)||tk<=0||tk>t_land){ guiPrint("tick数值非法"); return; }
+        if(isNaN(tk)||tk<=0||tk>t_land){ guiPrint("⚠tick数值非法"); return; }
         const pos = get_pos(pearl, v0, tk);
         guiPrint(`tick ${tk}：X=${pos[0].toFixed(6)}, Y=${pos[1].toFixed(6)}, Z=${pos[2].toFixed(6)}`);
     }
 }
+
 function runModeG(){
-    clearOutput();
+    beginOutput();
     const px = parseFloat(document.getElementById("g_pe_x").value);
     const pz = parseFloat(document.getElementById("g_pe_z").value);
     const ix = parseFloat(document.getElementById("g_ix").value);
     const iz = parseFloat(document.getElementById("g_iz").value);
-    if([px,pz,ix,iz].some(isNaN)){ guiPrint(""+ERR_MSG.input_invalid); return; }
+    if([px,pz,ix,iz].some(isNaN)){ guiPrint("❌"+ERR_MSG.input_invalid); return; }
     guiPrint(`【G模式｜拦截求解】珍珠X=${px} Z=${pz}｜拦截X=${ix} Z=${iz}｜珍珠Y固定=${phys.FIX_PEARL_Y}`);
-    const [res,err] = solve_intercept(px,pz,ix,iz);
-    if(!res){ guiPrint("\n计算失败："+ERR_MSG[err]); return; }
+    if (romEnabled) guiPrint(`ROM模式：在火控架构 [${(romArch || []).join(",")}] 内寻找最少TNT解`);
+    const [res,err] = romEnabled
+        ? solve_intercept_rom(px, pz, ix, iz, null, romArch)
+        : solve_intercept(px, pz, ix, iz);
+    if(!res){ guiPrint("\n❌计算失败："+ERR_MSG[err]); return; }
+    const dropPct = phys.MAX_DROP > 0 ? (res.drop / phys.MAX_DROP * 100).toFixed(1) : "0.0";
     guiPrint(`\n====G拦截结果====`);
     guiPrint(`打角方向     ：${res.direct}`);
     guiPrint(`左阵列TNT    ：${res.nL}`);
@@ -1062,15 +1393,36 @@ function runModeG(){
     guiPrint(`总TNT数量    ：${res.total}`);
     guiPrint(`经过拦截点Tick：${res.t_intercept.toFixed(2)}`);
     guiPrint(`经过拦截点秒数：${(res.t_intercept/20).toFixed(3)} s`);
-    guiPrint(`到达拦截点下落：${res.drop.toFixed(3)} 格（上限${phys.MAX_DROP}）`);
+    guiPrint(`到达拦截点下落：${res.drop.toFixed(3)} 格（上限${phys.MAX_DROP}，占比 ${dropPct}%）`);
     guiPrint(`校验拦截坐标：X=${res.check_pos[0].toFixed(3)} Z=${res.check_pos[2].toFixed(3)}`);
+    if (romEnabled && res.expr_L !== undefined) {
+        guiPrint(`ROM左阵列表达式：${res.expr_L}`);
+        guiPrint(`ROM右阵列表达式：${res.expr_R}`);
+    }
 }
-// 页面加载读取本地存储物理参数
+
 (function init(){
     try{
         const savedPhys = localStorage.getItem("phys");
-        if(savedPhys) phys = JSON.parse(savedPhys);
+        if(savedPhys) {
+            const saved = JSON.parse(savedPhys);
+            // 兼容旧版本存储：只取当前存在的键，避免把已废弃参数带回来
+            const merged = Object.assign({}, DEFAULT_PHYS, saved);
+            for (const k of Object.keys(merged)) {
+                if (!(k in DEFAULT_PHYS)) delete merged[k];
+            }
+            phys = merged;
+            if (typeof phys.BISECT_TIMES !== 'number' || isNaN(phys.BISECT_TIMES)) {
+                phys.BISECT_TIMES = 120;
+            } else {
+                let b = Math.round(phys.BISECT_TIMES);
+                if (b <= 0) b = 120;
+                if (b > 512) b = 512;
+                phys.BISECT_TIMES = b;
+            }
+        }
     }catch(e){}
+    updateRomButton();
 })();
 </script>
 </body>
