@@ -5,143 +5,219 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>璀璨17基岩版珍珠炮计算器</title>
 <style>
+/* ===== 主题令牌：纯色、无渐变。深色为黑/深灰，浅色为白/浅灰 ===== */
 :root{
-    --bg:#0a0e13;
-    --panel:#111a24;
-    --panel-2:#0d151d;
-    --line:#1e2b39;
-    --line-soft:#18242f;
-    --text:#e8eef5;
-    --muted:#8b9bb0;
-    --accent:#4cc2ff;
-    --accent-strong:#2b95d6;
-    --ok:#2ecc71;
-    --ok-strong:#1f9e57;
-    --danger:#e5484d;
-    --radius:14px;
+    color-scheme:dark;
+    --bg:#000000;
+    --panel:#16181c;
+    --panel-2:#0b0d0f;
+    --panel-3:#22262b;
+    --line:#2b3037;
+    --line-strong:#424a54;
+    --text:#e8eaed;
+    --text-2:#c3c8ce;
+    --muted:#8b929c;
+    --ok:#3fb950;
+    --ok-solid:#238636;
+    --ok-solid-hover:#2ea043;
+    --danger:#f85149;
+    --danger-soft:#2a1416;
+    --focus:#6ea8fe;
+    --focus-ring:rgba(110,168,254,.22);
+    --btn-primary-bg:#e8eaed;
+    --btn-primary-bg-hover:#ffffff;
+    --btn-primary-text:#000000;
+    --seg-bg:#000000;
+    --seg-active-bg:#22262b;
+    --seg-active-text:#ffffff;
+    --out-bg:#050607;
+    --shadow:0 1px 2px rgba(0,0,0,.6);
+    --radius:10px;
+    --radius-sm:8px;
+}
+html[data-theme="light"]{
+    color-scheme:light;
+    --bg:#e7eaee;
+    --panel:#ffffff;
+    --panel-2:#eef1f5;
+    --panel-3:#e2e6ec;
+    --line:#d0d6de;
+    --line-strong:#b3bcc7;
+    --text:#15181c;
+    --text-2:#3b424b;
+    --muted:#5f6874;
+    --ok:#1a7f37;
+    --ok-solid:#1a7f37;
+    --ok-solid-hover:#166b2f;
+    --danger:#cf222e;
+    --danger-soft:#fdf2f3;
+    --focus:#0969da;
+    --focus-ring:rgba(9,105,218,.16);
+    --btn-primary-bg:#1f2328;
+    --btn-primary-bg-hover:#000000;
+    --btn-primary-text:#ffffff;
+    --seg-bg:#e2e6ec;
+    --seg-active-bg:#ffffff;
+    --seg-active-text:#15181c;
+    --out-bg:#e9edf2;
+    --shadow:0 1px 2px rgba(16,24,40,.08);
+    --radius:10px;
+    --radius-sm:8px;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 body{
-    background:
-        radial-gradient(900px 480px at 50% -8%, rgba(76,194,255,.10), transparent 65%),
-        radial-gradient(700px 420px at 100% 0%, rgba(46,204,113,.06), transparent 60%),
-        var(--bg);
-    background-attachment:fixed;
+    background:var(--bg);
     color:var(--text);
     font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
     min-height:100vh;
-    padding:26px 16px 56px;
+    padding:28px 16px 56px;
     -webkit-font-smoothing:antialiased;
+    transition:background-color .18s ease,color .18s ease;
 }
 .container{max-width:1080px;margin:0 auto;}
-header{margin-bottom:20px;}
-h1{
-    font-size:clamp(19px,3.6vw,26px);
-    font-weight:650;
-    letter-spacing:.01em;
-    background:linear-gradient(92deg,#dff2ff,#4cc2ff 55%,#8ef0c0);
-    -webkit-background-clip:text;background-clip:text;color:transparent;
-    margin-bottom:6px;
+
+/* ===== 页头 ===== */
+.app-header{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+    margin-bottom:22px;
 }
-.subtitle{color:var(--muted);font-size:12.5px;letter-spacing:.02em;}
+.brand{min-width:0;}
+h1{
+    font-size:clamp(18px,3.2vw,22px);
+    font-weight:600;
+    letter-spacing:.01em;
+    color:var(--text);
+    margin-bottom:6px;
+    line-height:1.35;
+}
+.subtitle{color:var(--muted);font-size:12.5px;line-height:1.5;}
+
+/* 主题切换：分段控件 */
+.theme-switch{
+    display:inline-flex;flex-shrink:0;
+    border:1px solid var(--line);border-radius:var(--radius-sm);
+    background:var(--seg-bg);padding:3px;gap:3px;
+}
+.theme-switch button{
+    border:none;background:transparent;color:var(--muted);
+    padding:5px 12px;border-radius:6px;font-size:12.5px;font-weight:500;
+    cursor:pointer;transition:background-color .14s ease,color .14s ease;
+}
+.theme-switch button:hover{color:var(--text);}
+.theme-switch button.active{
+    background:var(--seg-active-bg);color:var(--seg-active-text);
+    font-weight:600;box-shadow:inset 0 0 0 1px var(--line-strong),var(--shadow);
+}
+.theme-switch button:focus-visible{outline:2px solid var(--focus);outline-offset:1px;}
+
+/* ===== 面板 ===== */
 .panel{
-    background:linear-gradient(180deg,rgba(255,255,255,.028),rgba(255,255,255,0) 42%),var(--panel);
+    background:var(--panel);
     border:1px solid var(--line);
     border-radius:var(--radius);
     padding:18px;
-    margin-bottom:16px;
-    box-shadow:0 10px 30px rgba(0,0,0,.22);
+    margin-bottom:14px;
+    box-shadow:var(--shadow);
+    transition:background-color .18s ease,border-color .18s ease;
 }
 .panel h2{
-    color:var(--accent);
-    font-size:14px;
+    color:var(--text-2);
+    font-size:12.5px;
     font-weight:600;
-    letter-spacing:.04em;
-    margin-bottom:13px;
-    display:flex;align-items:center;gap:9px;
+    letter-spacing:.05em;
+    margin-bottom:14px;
+    padding-bottom:10px;
+    border-bottom:1px solid var(--line);
 }
-.panel h2::before{
-    content:"";width:3px;height:14px;border-radius:2px;
-    background:linear-gradient(180deg,var(--accent),rgba(76,194,255,.25));
-}
-.mode-bar{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:4px;}
+.mode-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:2px;}
+
+/* ===== 按钮 ===== */
 button{
-    background:#1b2937;
+    background:var(--panel-2);
     color:var(--text);
-    border:1px solid var(--line);
-    padding:9px 14px;
-    border-radius:10px;
+    border:1px solid var(--line-strong);
+    padding:8px 14px;
+    border-radius:var(--radius-sm);
     cursor:pointer;
     font-family:inherit;
     font-size:13px;
     font-weight:500;
-    transition:background .16s ease,border-color .16s ease,transform .12s ease,box-shadow .16s ease,color .16s ease;
+    line-height:1.35;
+    transition:background-color .14s ease,border-color .14s ease,color .14s ease;
 }
-button:hover{background:#22384b;border-color:#2d4560;transform:translateY(-1px);}
-button:active{transform:translateY(0);}
-button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+button:hover{background:var(--panel-3);}
+button:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
 button.primary{
-    background:linear-gradient(180deg,#3aa7e0,#2a7fb5);
-    border-color:#3aa7e0;
-    color:#04121c;
-    font-weight:650;
+    background:var(--btn-primary-bg);
+    border-color:var(--btn-primary-bg);
+    color:var(--btn-primary-text);
+    font-weight:600;
 }
-button.primary:hover{background:linear-gradient(180deg,#4cb6ec,#2f8cc4);}
-button.secondary{background:#151f2a;color:#c3d2e2;}
-button.secondary:hover{background:#1c2a38;}
-button.danger{background:#2a1518;border-color:#4a1f23;color:#ffb4b6;}
-button.danger:hover{background:#3a1c20;border-color:#632a2f;}
-button.mode{padding:9px 15px;}
-button.mode.active{
-    background:linear-gradient(180deg,var(--ok),var(--ok-strong));
-    border-color:#3ee183;
-    color:#04170c;
-    font-weight:650;
-    box-shadow:0 0 0 3px rgba(46,204,113,.16),0 6px 18px rgba(46,204,113,.16);
+button.primary:hover{background:var(--btn-primary-bg-hover);border-color:var(--btn-primary-bg-hover);}
+button.secondary{background:var(--panel-2);color:var(--text-2);}
+button.secondary:hover{background:var(--panel-3);color:var(--text);}
+button.danger{
+    background:transparent;border-color:var(--line-strong);color:var(--danger);
 }
+button.danger:hover{background:var(--danger-soft);border-color:var(--danger);}
+button.mode{padding:8px 15px;}
+button.mode.active,
 button.active{
-    background:linear-gradient(180deg,var(--ok),var(--ok-strong));
-    border-color:#3ee183;
-    color:#04170c;
-    font-weight:650;
-    box-shadow:0 0 0 3px rgba(46,204,113,.16);
+    background:var(--ok-solid);
+    border-color:var(--ok-solid);
+    color:#ffffff;
+    font-weight:600;
 }
+button.mode.active:hover,
+button.active:hover{background:var(--ok-solid-hover);border-color:var(--ok-solid-hover);}
+
+/* ===== 表单 ===== */
 .form-row{
     display:flex;
     flex-wrap:wrap;
     gap:10px;
     align-items:center;
-    margin:9px 0;
+    margin:8px 0;
 }
-.form-row label{width:132px;flex-shrink:0;font-size:12.5px;color:#b9c8d8;}
+.form-row label{width:150px;flex-shrink:0;font-size:12.5px;color:var(--text-2);}
+.phys-panel .form-row label{width:250px;}
 .form-row input,.form-row select,textarea{
     flex:1;
-    min-width:130px;
+    min-width:120px;
     background:var(--panel-2);
     color:var(--text);
-    border:1px solid var(--line-soft);
-    padding:9px 11px;
-    border-radius:9px;
+    border:1px solid var(--line);
+    padding:8px 10px;
+    border-radius:var(--radius-sm);
     font-family:ui-monospace,Consolas,"Courier New",monospace;
     font-size:13px;
-    transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;
+    transition:border-color .14s ease,box-shadow .14s ease,background-color .14s ease;
 }
-.form-row input:hover,.form-row select:hover{border-color:#2a3b4d;}
+.form-row input:hover,.form-row select:hover{border-color:var(--line-strong);}
 .form-row input:focus,.form-row select:focus,textarea:focus{
-    outline:none;border-color:var(--accent);
-    box-shadow:0 0 0 3px rgba(76,194,255,.14);
-    background:#0b131b;
+    outline:none;border-color:var(--focus);
+    box-shadow:0 0 0 3px var(--focus-ring);
 }
-input::placeholder{color:#5d6f83;}
-select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#7f93a8 50%),linear-gradient(135deg,#7f93a8 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:32px;}
+input::placeholder{color:var(--muted);opacity:.8;}
+select{
+    appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;
+    background-size:5px 5px,5px 5px;
+    background-repeat:no-repeat;
+    padding-right:32px;
+}
 textarea{resize:vertical;min-height:120px;}
+
+/* 下拉箭头是唯一保留的线性渐变，用于绘制实心三角（非装饰） */
+/* ===== 输出 ===== */
 .result-card{
-    background:linear-gradient(180deg,rgba(76,194,255,.05),rgba(76,194,255,.015));
-    border:1px solid #1d3346;
-    border-radius:11px;
+    background:var(--out-bg);
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
     padding:14px 15px;
     white-space:pre-wrap;
-    color:#cfe8ff;
+    color:var(--text);
     font-family:ui-monospace,Consolas,"Courier New",monospace;
     font-size:12.5px;
     line-height:1.62;
@@ -150,70 +226,107 @@ textarea{resize:vertical;min-height:120px;}
     overflow-y:auto;
     overflow-x:auto;
     scrollbar-width:thin;
-    scrollbar-color:#2a3b4d transparent;
+    scrollbar-color:var(--line-strong) transparent;
 }
 .result-card::-webkit-scrollbar{width:9px;height:9px;}
-.result-card::-webkit-scrollbar-thumb{background:#26384a;border-radius:999px;border:2px solid transparent;background-clip:padding-box;}
+.result-card::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:999px;border:2px solid transparent;background-clip:padding-box;}
 .result-card::-webkit-scrollbar-track{background:transparent;}
 small{color:var(--muted);font-size:11.5px;}
 .hidden{display:none !important;}
-.two-col{display:grid;grid-template-columns:1.05fr .95fr;gap:16px;align-items:start;}
+.two-col{display:grid;grid-template-columns:1.05fr .95fr;gap:14px;align-items:start;}
 @media(max-width:820px){.two-col{grid-template-columns:1fr;}}
-.info-text{color:var(--muted);margin:8px 0;font-size:12px;line-height:1.6;}
-.status-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+.info-text{color:var(--muted);margin:8px 0;font-size:12px;line-height:1.65;}
+
+/* ===== 状态徽标 ===== */
+.status-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
 .badge{
-    display:inline-flex;align-items:center;gap:7px;
-    background:#16232f;border:1px solid #2b4058;
-    border-radius:999px;padding:6px 13px;font-size:11.5px;color:#93a8bd;
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:5px 10px;
+    font-size:11.5px;
+    color:var(--muted);
 }
-.badge b{color:#8fe3ff;font-weight:600;letter-spacing:.02em;}
-.badge.rom-on{border-color:rgba(46,204,113,.55);color:#9df0bf;background:rgba(46,204,113,.10);}
-.badge.rom-on b{color:#b6ffd4;}
+.badge b{color:var(--text-2);font-weight:600;}
+.badge.rom-on{border-color:var(--ok);color:var(--ok);}
+.badge.rom-on b{color:var(--ok);}
+
+/* ===== 文件上传 ===== */
 .file-drop{
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
-    padding:20px 16px;
-    border:1px dashed #2b4058;border-radius:12px;
-    background:rgba(76,194,255,.035);
+    display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;
+    padding:16px;
+    border:1px dashed var(--line-strong);
+    border-radius:var(--radius-sm);
+    background:var(--panel-2);
     cursor:pointer;
-    transition:border-color .16s ease,background .16s ease,transform .12s ease;
+    transition:border-color .14s ease,background-color .14s ease;
 }
-.file-drop:hover{border-color:var(--accent);background:rgba(76,194,255,.075);transform:translateY(-1px);}
-.file-drop-title{font-size:13px;color:#cfe8ff;font-weight:550;}
+.file-drop:hover{border-color:var(--text-2);background:var(--panel-3);}
+.file-drop-title{font-size:13px;color:var(--text-2);font-weight:500;}
 .file-drop-hint{font-size:11.5px;color:var(--muted);}
 .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
-hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line-soft);}
+hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line);}
+
+/* ===== 弹窗 ===== */
 .modal-overlay{
     position:fixed;inset:0;z-index:100;
     display:flex;align-items:center;justify-content:center;
     padding:20px;
-    background:rgba(4,8,12,.66);
-    backdrop-filter:blur(6px);
-    -webkit-backdrop-filter:blur(6px);
-    animation:fade .16s ease;
+    background:rgba(0,0,0,.55);
+    animation:fade .14s ease;
 }
 .modal-card{
     width:min(520px,100%);
-    background:linear-gradient(180deg,rgba(255,255,255,.04),transparent),#101a24;
-    border:1px solid #24405a;
-    border-radius:16px;
+    background:var(--panel);
+    border:1px solid var(--line-strong);
+    border-radius:12px;
     padding:22px;
-    box-shadow:0 24px 60px rgba(0,0,0,.5);
-    animation:rise .18s ease;
+    box-shadow:0 16px 48px rgba(0,0,0,.32);
+    animation:rise .16s ease;
 }
-.modal-card h2{color:var(--accent);font-size:15px;margin-bottom:10px;}
+.modal-card h2{color:var(--text);font-size:15px;font-weight:600;margin-bottom:10px;}
 .modal-card .info-text{margin:0 0 14px;}
-.modal-card code{background:#0b131b;border:1px solid var(--line-soft);border-radius:6px;padding:1px 6px;font-size:12px;color:#9fe0ff;}
-.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+.modal-card code{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:5px;
+    padding:1px 6px;font-size:12px;color:var(--text-2);
+}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
 @keyframes fade{from{opacity:0}to{opacity:1}}
-@keyframes rise{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes rise{from{transform:translateY(6px);opacity:0}to{transform:translateY(0);opacity:1}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:520px){
+    body{padding:20px 12px 44px;}
+    .app-header{flex-direction:column;align-items:stretch;gap:12px;}
+    .theme-switch{align-self:flex-start;}
+    .form-row label,.phys-panel .form-row label{width:100%;}
+    .form-row input,.form-row select{min-width:0;}
+}
 </style>
+<script>
+/* 首屏前先定主题，避免浅色用户看到深色闪一下 */
+(function () {
+    try {
+        var saved = localStorage.getItem("theme");
+        var light = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+        document.documentElement.setAttribute("data-theme", saved === "light" || saved === "dark" ? saved : (light ? "light" : "dark"));
+    } catch (e) {
+        document.documentElement.setAttribute("data-theme", "dark");
+    }
+})();
+</script>
 </head>
 <body>
 <div class="container">
-    <header>
-        <h1>璀璨17｜基岩版珍珠炮计算器</h1>
-        <div class="subtitle">TNT 阵列弹道仿真 落点反推 拦截求解</div>
+    <header class="app-header">
+        <div class="brand">
+            <h1>璀璨17｜基岩版珍珠炮计算器</h1>
+            <div class="subtitle">TNT 阵列弹道仿真 · 落点反推 · 拦截求解</div>
+        </div>
+        <div class="theme-switch" role="group" aria-label="界面主题">
+            <button type="button" data-theme-set="light" onclick="setTheme('light')">浅色</button>
+            <button type="button" data-theme-set="dark" onclick="setTheme('dark')">深色</button>
+        </div>
     </header>
     <!-- 模式选择 -->
     <div class="panel">
@@ -301,7 +414,7 @@ hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line-soft);}
             <!-- G模式 -->
             <div id="panelG" class="panel hidden">
                 <h2>拦截模式：Y面拦截</h2>
-                <div class="info-text">珍珠Y面使用虚拟三维面</div>
+                <div class="info-text">珍珠Y面为虚拟平面，固定 Y=64</div>
                 <div class="form-row"><label>珍珠X</label><input id="g_pe_x" type="number" step="any"></div>
                 <div class="form-row"><label>珍珠Z</label><input id="g_pe_z" type="number" step="any"></div>
                 <div class="form-row"><label>拦截目标X</label><input id="g_ix" type="number" step="any"></div>
@@ -309,24 +422,21 @@ hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line-soft);}
                 <div class="mode-bar"><button onclick="runModeG()">开始计算</button></div>
             </div>
             <!-- 物理参数面板 -->
-            <div id="panelPhys" class="panel hidden">
-                <h2>物理参数设置</h2>
-                <small>修改会保存到浏览器本地存储</small>
+            <div id="panelPhys" class="panel phys-panel hidden">
+                <h2>物理参数</h2>
+                <p class="info-text">修改保存在本机浏览器。已移除「珍珠默认Y坐标（虚拟面高）」与「TNT搜索余量」两项：前者只改变整体平移、对弹道结果无影响，后者从未被算法读取。</p>
                 <div class="form-row"><label>重力加速度(G)</label><input id="p_G" type="number" step="any"></div>
                 <div class="form-row"><label>眼部高度偏移(EYE)</label><input id="p_EYE" type="number" step="any"></div>
                 <div class="form-row"><label>单颗TNT最大推力(SINGLE_MAX)</label><input id="p_SINGLE_MAX" type="number" step="any"></div>
-                <div class="form-row"><label>TNT搜索余量(SEARCH_RANGE)</label><input id="p_SEARCH_RANGE" type="number"></div>
                 <div class="form-row"><label>最大仿真游戏刻(MAX_TICK)</label><input id="p_MAX_TICK" type="number"></div>
                 <div class="form-row"><label>阵列单路TNT上限(MAX_SINGLE_ARRAY)</label><input id="p_MAX_SINGLE_ARRAY" type="number"></div>
                 <div class="form-row"><label>坐标轴判定精度(AXIS_EPS)</label><input id="p_AXIS_EPS" type="number" step="any"></div>
-                <div class="form-row"><label>位置误差阈值(ERR_POS_EPS)</label><input id="p_ERR_POS_EPS" type="number" step="any"></div>
-                <div class="form-row"><label>珍珠默认Y坐标(FIX_PEARL_Y)</label><input id="p_FIX_PEARL_Y" type="number" step="any"></div>
-                <div class="form-row"><label>拦截允许最大下落格数(MAX_DROP)</label><input id="p_MAX_DROP" type="number" step="any"></div>
+                <div class="form-row"><label>位置误差阈值(ERR_POS_EPS)</label><input id="p_ERR_POS_EPS" type="number" step="any" min="0"></div>
+                <div class="form-row"><label>拦截允许最大下落格数(MAX_DROP)</label><input id="p_MAX_DROP" type="number" step="any" min="0"></div>
                 <div class="form-row"><label>二分次数(BISECT_TIMES)</label><input id="p_BISECT_TIMES" type="number" step="any"></div>
                 <div class="mode-bar">
-                    <button onclick="readPhysToGui()">读取当前参数</button>
                     <button class="primary" onclick="savePhysFromGui()">保存参数</button>
-                    <button class="secondary" onclick="resetPhysDefault()">恢复默认物理</button>
+                    <button class="secondary" onclick="resetPhysDefault()">恢复默认</button>
                     <button class="secondary" onclick="closePhysicsPanel()">关闭</button>
                 </div>
             </div>
@@ -337,7 +447,7 @@ hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line-soft);}
 三维计算｜已知落点坐标，反推左右阵列TNT颗数。当目标Y高于珍珠Y时，自动计算抛射所需Y轴动量；当目标Y与珍珠Y相等时，自动切入G模式接管。
 落点计算｜输入珍珠坐标+左右TNT数量+方向，正向算出珍珠落点。
 轨迹查询｜给定全套配置，计算飞行弹道；支持查询任意tick时刻珍珠空间坐标。
-拦截求解｜拦截求解，珍珠Y使用物理参数【珍珠默认Y坐标】；约束下落≤拦截允许最大下落格数，并寻找最少TNT用量。
+拦截求解｜拦截求解，珍珠Y面固定为虚拟平面 Y=64；约束下落≤拦截允许最大下落格数，并寻找最少TNT用量。
 【ROM模式】
 点击「ROM模式」按钮开启（按钮变绿），再点一次关闭。开启后只在火控架构能够组合出的TNT数量里寻解，并给出可直接使用的阵列表达式。
 若已加载JSON配置文件，直接采用其中的 arch；若未加载，会弹窗让你输入火控架构，保存后生效；在弹窗点「取消」则ROM模式自动关闭。
@@ -400,19 +510,25 @@ hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line-soft);}
 </div>
 <script>
 
+/* 面板暴露的可调参数 = 下面除 FIX_PEARL_Y 之外的全部项。
+ * 已移除两项：
+ *   SEARCH_RANGE（TNT搜索余量）——A 模式早已改用固定搜索窗，从未被读取，直接从参数表删除；
+ *   FIX_PEARL_Y（珍珠默认Y坐标，即"虚拟面高"）——珍珠与 TNT 一起平移，推力向量不变，
+ *   对 TNT 颗数/飞行时间/下落量毫无影响（实测 64/70/120 结果完全相同），仅影响打印出的绝对坐标。
+ *   因此不再作为可调项，内部固定为 64 供 G 模式打印与几何使用。
+ */
 const DEFAULT_PHYS = {
     G: 0.025,
     R: 8.0,
     EYE: 0.25,
     SINGLE_MAX: 0.90125,
-    SEARCH_RANGE: 1,
     MAX_TICK: 20000,
     MAX_SINGLE_ARRAY: 61440,
     AXIS_EPS: 1e-4,
     ERR_POS_EPS: 0.01,
-    FIX_PEARL_Y: 64.0,
     MAX_DROP: 1.0,
-    BISECT_TIMES: 120
+    BISECT_TIMES: 120,
+    FIX_PEARL_Y: 64.0
 };
 let phys = JSON.parse(JSON.stringify(DEFAULT_PHYS));
 const ERR_MSG = {
@@ -1034,6 +1150,32 @@ let configData = null;
 let configFileName = "无";
 
 // ===================== GUI桥接层 =====================
+/* ---------- 主题（浅色 / 深色） ---------- */
+const THEME_KEY = "theme";
+function applyTheme(theme, persist){
+    const t = theme === "light" ? "light" : "dark";
+    if (document.documentElement && document.documentElement.setAttribute) {
+        document.documentElement.setAttribute("data-theme", t);
+    }
+    const btns = document.querySelectorAll("[data-theme-set]");
+    for (let i = 0; i < btns.length; i++) {
+        const b = btns[i];
+        if (b.getAttribute("data-theme-set") === t) b.classList.add("active");
+        else b.classList.remove("active");
+    }
+    if (persist) { try { localStorage.setItem(THEME_KEY, t); } catch (e) {} }
+}
+function setTheme(theme){ applyTheme(theme, true); }
+function initTheme(){
+    let saved = null;
+    try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+    let fallback = "dark";
+    try {
+        if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) fallback = "light";
+    } catch (e) {}
+    applyTheme(saved === "light" || saved === "dark" ? saved : fallback, false);
+}
+
 const outBox = document.getElementById("outBox");
 function guiPrint(s){ outBox.textContent += s+"\n"; }
 function clearOutput(){ outBox.textContent = "等待执行计算..."; }
@@ -1057,27 +1199,29 @@ function readPhysToGui(){
     document.getElementById("p_G").value = phys.G;
     document.getElementById("p_EYE").value = phys.EYE;
     document.getElementById("p_SINGLE_MAX").value = phys.SINGLE_MAX;
-    document.getElementById("p_SEARCH_RANGE").value = phys.SEARCH_RANGE;
     document.getElementById("p_MAX_TICK").value = phys.MAX_TICK;
     document.getElementById("p_MAX_SINGLE_ARRAY").value = phys.MAX_SINGLE_ARRAY;
     document.getElementById("p_AXIS_EPS").value = phys.AXIS_EPS;
     document.getElementById("p_ERR_POS_EPS").value = phys.ERR_POS_EPS;
-    document.getElementById("p_FIX_PEARL_Y").value = phys.FIX_PEARL_Y;
     document.getElementById("p_MAX_DROP").value = phys.MAX_DROP;
     document.getElementById("p_BISECT_TIMES").value = phys.BISECT_TIMES;
 }
 function savePhysFromGui(){
-    phys.G = parseFloat(document.getElementById("p_G").value);
-    phys.EYE = parseFloat(document.getElementById("p_EYE").value);
-    phys.SINGLE_MAX = parseFloat(document.getElementById("p_SINGLE_MAX").value);
-    phys.SEARCH_RANGE = Number(document.getElementById("p_SEARCH_RANGE").value);
-    phys.MAX_TICK = Number(document.getElementById("p_MAX_TICK").value);
-    phys.MAX_SINGLE_ARRAY = Number(document.getElementById("p_MAX_SINGLE_ARRAY").value);
-    phys.AXIS_EPS = parseFloat(document.getElementById("p_AXIS_EPS").value);
-    phys.ERR_POS_EPS = parseFloat(document.getElementById("p_ERR_POS_EPS").value);
-    phys.FIX_PEARL_Y = parseFloat(document.getElementById("p_FIX_PEARL_Y").value);
-    phys.MAX_DROP = parseFloat(document.getElementById("p_MAX_DROP").value);
+    // 非法输入（空/非数字/越界）保留原值，不做静默置零
+    const num = (id, fallback) => {
+        const v = parseFloat(document.getElementById(id).value);
+        return Number.isFinite(v) ? v : fallback;
+    };
+    phys.G = num("p_G", phys.G);
+    phys.EYE = num("p_EYE", phys.EYE);
+    phys.SINGLE_MAX = num("p_SINGLE_MAX", phys.SINGLE_MAX);
+    phys.MAX_TICK = num("p_MAX_TICK", phys.MAX_TICK);
+    phys.MAX_SINGLE_ARRAY = num("p_MAX_SINGLE_ARRAY", phys.MAX_SINGLE_ARRAY);
+    phys.AXIS_EPS = num("p_AXIS_EPS", phys.AXIS_EPS);
+    phys.ERR_POS_EPS = num("p_ERR_POS_EPS", phys.ERR_POS_EPS);
+    phys.MAX_DROP = num("p_MAX_DROP", phys.MAX_DROP);
 
+    // 二分次数：取整、0/NaN 回退 120、上限 512（与原版一致）
     let bisectVal = Number(document.getElementById("p_BISECT_TIMES").value);
     if (isNaN(bisectVal)) bisectVal = 120;
     bisectVal = Math.round(bisectVal);
@@ -1406,6 +1550,7 @@ function runModeG(){
         }
     }catch(e){}
     updateRomButton();
+    initTheme();
 })();
 </script>
 </body>
