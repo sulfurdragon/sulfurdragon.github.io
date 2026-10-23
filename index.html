@@ -321,7 +321,7 @@ hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line);}
     <header class="app-header">
         <div class="brand">
             <h1>璀璨17｜基岩版珍珠炮计算器</h1>
-            <div class="subtitle">TNT 阵列弹道仿真 · 落点反推 · 拦截求解</div>
+            <div class="subtitle">鎏龍霄飓MCBE</div>
         </div>
         <div class="theme-switch" role="group" aria-label="界面主题">
             <button type="button" data-theme-set="light" onclick="setTheme('light')">浅色</button>
@@ -424,7 +424,7 @@ hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line);}
             <!-- 物理参数面板 -->
             <div id="panelPhys" class="panel phys-panel hidden">
                 <h2>物理参数</h2>
-                <p class="info-text">修改保存在本机浏览器。已移除「珍珠默认Y坐标（虚拟面高）」与「TNT搜索余量」两项：前者只改变整体平移、对弹道结果无影响，后者从未被算法读取。</p>
+                <p class="info-text">您的修改将会保存在浏览器。鎏龍霄飓建议非专业人士谨慎调节物理参数，修改物理参数可能导致重大计算错误。</p>
                 <div class="form-row"><label>重力加速度(G)</label><input id="p_G" type="number" step="any"></div>
                 <div class="form-row"><label>眼部高度偏移(EYE)</label><input id="p_EYE" type="number" step="any"></div>
                 <div class="form-row"><label>单颗TNT最大推力(SINGLE_MAX)</label><input id="p_SINGLE_MAX" type="number" step="any"></div>
@@ -510,13 +510,6 @@ hr.sep{margin:14px 0;border:none;border-top:1px solid var(--line);}
 </div>
 <script>
 
-/* 面板暴露的可调参数 = 下面除 FIX_PEARL_Y 之外的全部项。
- * 已移除两项：
- *   SEARCH_RANGE（TNT搜索余量）——A 模式早已改用固定搜索窗，从未被读取，直接从参数表删除；
- *   FIX_PEARL_Y（珍珠默认Y坐标，即"虚拟面高"）——珍珠与 TNT 一起平移，推力向量不变，
- *   对 TNT 颗数/飞行时间/下落量毫无影响（实测 64/70/120 结果完全相同），仅影响打印出的绝对坐标。
- *   因此不再作为可调项，内部固定为 64 供 G 模式打印与几何使用。
- */
 const DEFAULT_PHYS = {
     G: 0.025,
     R: 8.0,
@@ -540,7 +533,7 @@ const ERR_MSG = {
     input_invalid: "输入非数字，格式错误",
     intercept_target_same_as_pearl: "错误：拦截点与珍珠炮口位置几乎重合",
     intercept_no_solution_basis: "错误：左右TNT的推力组合无法合成指向拦截点的速度方向，无解",
-    intercept_tick_too_large: "错误：在单阵列61440上限内，找不到满足[下落≤1格]的解",
+    intercept_tick_too_large: "错误：在单阵列上限内，找不到合法的解",
     json_parse_err: "JSON解析失败，请检查配置文件格式",
     json_missing: "配置文件缺少珍珠坐标或火控架构字段",
 };
